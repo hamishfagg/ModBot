@@ -6,5 +6,6 @@ startup = [
 	'say',
 	'ranks',
 	'help',
-	'nope'
+	'nope',
+	'url'
 ]
