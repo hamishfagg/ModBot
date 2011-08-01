@@ -1,11 +1,13 @@
+import sys
+sys.path.append("modules")
+from constants import *
+import log
 import threading
 import time
-import sys
 import traceback
 from twisted.internet import ssl, reactor, protocol
 from twisted.words.protocols import irc
-sys.path.append("modules")
-from startup import *
+#from startup import *
 
 MSGHACK = 100000
 
@@ -15,6 +17,7 @@ class Bot(irc.IRCClient):
 
 	## Instance init.
 	def __init__(self):
+		self.logger = log.Module()
 		self.admins = []
 		self.users = []
 		self.modules = dict()
@@ -22,18 +25,17 @@ class Bot(irc.IRCClient):
 		self.startupErr = {}
 		self.inchannel = False
 		self.connected = False
-		for mod in startup:
-			self.loadModule(mod, None)
+		#for mod in startup:
+		#	self.loadModule(mod, None)
 	
 
-
-	
 	""" ADMIN LIST HANDLING """
 	
 	## List users in 'channel'. Used for gaining user modes on join.
 	# @param channel The channel for which to list names.
 	def who(self, channel):
-        	self.sendLine('WHO %s' % channel)
+		self.logger.log(LOG_DEBUG, "Retreiving user list.")
+		self.sendLine('WHO %s' % channel)
 
 	## Recieve a WHO reply from the server.
 	# @param nargs A list of arguments including modes etc. See twisted documentation for details.
@@ -46,6 +48,7 @@ class Bot(irc.IRCClient):
 	# @param nargs A list of arguments including modes etc. See twisted documentation for details.
 	def irc_RPL_ENDOFWHO(self, *nargs):
 		#This is to stop the hook being run before user lists are populated
+		self.logger.log(LOG_INFO, "Found admins: " + " ".join(self.admins))
 		self.runHook("joined", self.factory.channel)
 		
 		
@@ -53,35 +56,71 @@ class Bot(irc.IRCClient):
 	# @param hook The name of the hook to be run. This is a name of a function in the irc.IRCClient class and also the name of the method from which this one will be called in this case.
 	# @param args A list of the arguments to be passed to the hook function.
 	def runHook(self, hook, *args):
-		#print "Running hook %s" % hook
+		self.logger.log(LOG_DEBUG, "Running hook %s" % hook)
 		for module in self.modules:
-			function = getattr(self.modules[module], hook)
-			try:
-				function(*args)
-			except:
-				self.say(self.factory.channel, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSGHACK)
-				#print str(sys.exc_info())
-				traceback.print_tb(sys.exc_info()[2])
+			functionName = self.modules[module]['hooks'].get(hook, None)
+			if functionName != None:
+				try:
+					function = getattr(self.modules[module]['module'], functionName)
+					function(*args)
+				except Exception,e:
+					self.say(self.factory.channel, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSGHACK)
+					self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
+
+	def runCmd(self, cmd, *args):
+		self.logger.log(LOG_DEBUG, "Running cmd %s" % cmd)
+		for module in self.modules:
+			functionName = self.modules[module]['commands'].get(cmd, None)
+			if functionName != None:
+				try:
+					function = getattr(self.modules[module]['module'], functionName)					
+					function(*args)
+				except Exception,e:
+					self.say(self.factory.channel, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSGHACK)
+					self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
 	
 	## Tries to load a given module name and handles any errors. If the module is already loaded, it uses 'reload' to reload the module.
 	# @param moduleName The name of the module that should be looked for.
 	# @param channel The channel to send a loaded/failed message to. Allows load commands sent in PM to be replied to in PM.
 	def loadModule(self, moduleName, channel):
+		self.logger.log(LOG_DEBUG, "Attempting to load '%s'" % moduleName)
 		try:
 			if moduleName in sys.modules:
-				print "module found in sys.modules.. reloading"
-				module = reload(sys.modules[moduleName])
+				self.logger.log(LOG_DEBUG, "%s is in sys.modules - reloading" % moduleName)
+				#module = reload(sys.modules[moduleName])
 			else:
 				module = __import__(moduleName)
+				module = module.Module() 		#Get an object containing the 'Module' class of the given module
+				module.main = self
+
+				# Check dependancies
+				if hasattr(module, 'depends'):
+					for depend in module.depends:
+						if depend in sys.modules:
+							self.logger.log(LOG_DEBUG, " - Dependancy '%s' is loaded" % depend)
+							setattr(module, depend, sys.modules[depend].Module())
+						else:
+							self.logger.log(LOG_ERROR, "Failed to load %s: A dependancy (%s) is not loaded." % (moduleName, depend))
+							self.msg(channel, "Couldn't load module \'%s\': A dependancy (%s) is not loaded." % (moduleName, depend), MSGHACK)
+							return
+				else:
+					self.logger.log(LOG_DEBUG, "No dependancies found.")
+			
+			self.modules[moduleName] = {'module': module}
+			self.modules[moduleName]['hooks'] = getattr(module, 'hooks', {})
+			self.modules[moduleName]['commands'] = getattr(module, 'commands', {})
+			
+			self.logger.log(LOG_INFO, "Module '%s' has been loaded." % moduleName)
+
+			if self.inchannel: #Stop calls to 'msg' when startup modules are loaded
+				self.msg(channel, "%sLoaded module \'%s\'." % (self.colour, moduleName), MSGHACK)
+			self.runHook('loaded')
+
 		except:
+			raise
 			if self.inchannel: self.msg(channel, "Couldn't load module \'%s\': %s" % (moduleName, str(sys.exc_info()[1])), MSGHACK)
 			else: self.startupErr[moduleName] = sys.exc_info()[1]
-			return
-		self.modules[moduleName] = module.Module(self)
-		if self.inchannel: #Stop calls to 'say' when startup modules are loaded
-			self.msg(channel, "%sLoaded module \'%s\'." % (self.colour, moduleName), MSGHACK)
-
-
+			self.logger.log(LOG_ERROR, "Error loading module '%s':\n%s" % (moduleName, "".join(traceback.format_tb(sys.exc_info()[2]))))
 
 	""" TWISTED HOOKS """
 
@@ -164,8 +203,10 @@ class Bot(irc.IRCClient):
 		else: print '<%s> %s' % (user, message)
 		if channel == self.username: msgchannel = user
 		else: msgchannel = channel
-		self.host = userinfo[1]
+		self.host = userinfo[1].lower()
 		words = message.split()
+		if words[0].startswith('!'):
+			self.runCmd(words[0][1:], user, channel, words[1:])
 		if user in self.admins:
 			if words[0] == '!load':
 				for mod in words[1:]:

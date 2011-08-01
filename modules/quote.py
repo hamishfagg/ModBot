@@ -1,7 +1,15 @@
-from modulecommon import *
 import MySQLdb as mysql
 
-class Module(irc.IRCClient):
+class Module():
+
+	depends = ['mysql', 'log']
+	commands = {'q': 		'quote',
+				'quote':	'quote',
+				'rq':		'randQuote',
+				'randquote':'randQUote',
+				'nq':		'newQuote',
+				'newquote': 'newQuote'}
+	hooks =    {'loaded': 'loaded'}
 
 	help = {
 		'desc': 'searches, prints or adds new quotes. Tweets new quotes as they are added (if the Twitter module is loaded)',
@@ -23,36 +31,34 @@ class Module(irc.IRCClient):
 		}
 	}
 
-	def __init__(self, main):
-		self.main = main
-
-		self.db = mysql.connect(host="localhost", user="ircuser", passwd="ctg01", db="chaostheory")
-		self.cur = self.db.cursor()
-		self.db.ping()
+	def loaded(self):
+		self.mysql.connect('quotes')
 	
+	def quote(self, user, channel, args):
+		if len(args) == 0:
+			quote = self.mysql.find(fields=['quote'], order="created DESC", limit=1)[0]
+			self.main.msg(channel, quote[0], 10000)
+		else:
+			quotes = self.mysql.find(fields=['quote'], table="quotes WHERE UPPER(`quote`) LIKE UPPER(%s)" % " ".join(args), limit=6)
+			for quote in quotes:
+				self.main.msg(channel, self.main.colour + quote[0], MSGHACK)
+				if i == 4:
+					break
+			if len(results) > 5:
+				self.main.msg(channel, "%sExceeded maximum search results. Try a more specific search" % self.main.colour, MSGHACK)
+
 	def privmsg(self, user, channel, message):
-		self.db.ping(1)
 		if channel == self.main.nickname:
 			channel = user
 		
 		words = message.split(' ', 1)
 
 		if words[0] == '!rq' or words[0] == '!randquote':
-			self.cur.execute("""SELECT * FROM quotes ORDER BY rand() LIMIT 1""")
-			self.main.msg(channel, self.cur.fetchone()[2], MSGHACK)
+			#self.cur.execute("""SELECT * FROM quotes ORDER BY rand() LIMIT 1""")
+			#self.main.msg(channel, self.cur.fetchone()[2], MSGHACK)
+			pass
 		if words[0] == '!q' or words[0] == '!quote':
-			if len(words) == 1:
-				self.cur.execute("""SELECT * FROM quotes ORDER BY `created` DESC LIMIT 1""")
-				self.main.msg(channel, self.cur.fetchone()[2], MSGHACK)
-			else:
-				self.cur.execute("""SELECT * FROM quotes WHERE UPPER(`quote`) LIKE UPPER(%s) LIMIT 6""", ('%' + words[1] + '%',))
-				results = self.cur.fetchall()
-				for i in range(0, len(results)):
-					self.main.msg(channel, self.main.colour + results[i][2], MSGHACK)
-					if i == 4:
-						break
-				if len(results) > 5:
-					self.main.msg(channel, "%sExceeded maximum search results. Try a more specific search" % self.main.colour, MSGHACK)
+			pass
 		
 		if words[0] == '!sq' or words[0] == '!nq' or words[0] == '!storequote' or words[0] == '!newquote':
 			print user
