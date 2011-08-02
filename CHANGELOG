@@ -1,0 +1,15 @@
+-- Changelog --
+
+V2.0.0:
+- Added command, hook and dependancy registering.
+	- Modules define which other modules they depend on, and are not loaded unless all dependancies are met.
+	- Commands that the module responds to are also registered with modbot, along with the methods that should be called.
+	- Hooks like userJoin, userPart are registed in the same way that commands are.
+
+- Added seperate 'helper' MySQL module.
+	- Provides functions for finding and editing rows in DB tables instead of seperate implimentations in seperate modules.
+
+- Seperated Omegle module classes.
+	- Supplies an Omegle helper module that can be used with other modules if desired.
+
+- Added GPL to modbot and all packaged plugins.
