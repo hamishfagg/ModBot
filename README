@@ -5,15 +5,13 @@ It is built with ease of use in mind - whether that use be from the end user, so
 
 The main class in modbot.py provides the most basic of functions (loading plugins and running hooks), while plugins provide all other end-user functionality.
 
-Modbot currently takes 3 arguments - channel (without leading '#'), nickname and nickserv password
+Modbot currently takes 4 arguments - network, channel (without leading '#'), nickname and nickserv password (optional).
 
 E.g.
 
-python2 modbot.py chaostheory ModBot modbotisawesome
+python2 modbot.py irc.rizon.net channel ModBot modbotisawesome
 
-Would connect to the channel '#chaostheory', with the nickname 'ModBot', and identify with nickServ (if your specified nick is registered).
-I only just realised that modbot currently only connects to irc.rizon.net >_>
-TODO: - Add 'network' parameter.
+Would connect to the channel '#channel', with the nickname 'ModBot', and identify with nickServ (if your specified nick is registered).
 
 
 (Documentation on writing plugins is to come)
