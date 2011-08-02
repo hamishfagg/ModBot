@@ -13,7 +13,7 @@ MSGHACK = 100000
 
 class Bot(irc.IRCClient):
 
-	nickname = sys.argv[2]
+	nickname = sys.argv[3]
 
 	## Instance init.
 	def __init__(self):
@@ -136,8 +136,8 @@ class Bot(irc.IRCClient):
 		self.connected = True
 		self.runHook("signedOn")
 		self.join(self.factory.channel)
-		if len(sys.argv) > 3:
-			self.msg('nickserv', "identify %s" % sys.argv[3], MSGHACK)
+		if len(sys.argv) > 4:
+			self.msg('nickserv', "identify %s" % sys.argv[4], MSGHACK)
 		self.keepAlive()
 
 	## Called when the bot joins a channel.
@@ -269,6 +269,7 @@ class BotFactory(protocol.ClientFactory):
 		print "Could not connect: %s" % (reason,)
 
 if __name__ == "__main__":
-	chan = sys.argv[1]
-	reactor.connectSSL('irc.rizon.net', 9999, BotFactory('#' + chan), ssl.ClientContextFactory())
+	chan = sys.argv[2]
+	network = sys.argv[1]
+	reactor.connectSSL(network, 9999, BotFactory('#' + chan), ssl.ClientContextFactory())
 	reactor.run()
