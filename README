@@ -1,5 +1,21 @@
 ModBot V 2.0.0
 
-ModBot is a modular IRC bot written in python.
+ModBot is a modular IRC bot written in Python (2.7).
 It is built with ease of use in mind - whether that use be from the end user, someone writing a plugin, or someone editing existing parts of the bot.
+
+The main class in modbot.py provides the most basic of functions (loading plugins and running hooks), while plugins provide all other end-user functionality.
+
+Modbot currently takes 3 arguments - channel (without leading '#'), nickname and nickserv password
+
+E.g.
+
+python2 modbot.py chaostheory ModBot modbotisawesome
+
+Would connect to the channel '#chaostheory', with the nickname 'ModBot', and identify with nickServ (if your specified nick is registered).
+I only just realised that modbot currently only connects to irc.rizon.net >_>
+TODO: - Add 'network' parameter.
+
+
 (Documentation on writing plugins is to come)
+
+(Documentation on everyhting is to come)
