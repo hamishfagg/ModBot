@@ -1,0 +1,5 @@
+ModBot V 2.0.0
+
+ModBot is a modular IRC bot written in python.
+It is built with ease of use in mind - whether that use be from the end user, someone writing a plugin, or someone editing existing parts of the bot.
+(Documentation on writing plugins is to come)
