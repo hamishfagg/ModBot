@@ -9,7 +9,9 @@ Modbot currently takes 4 arguments - network, channel (without leading '#'), nic
 
 E.g.
 
+<pre><code>
 python2 modbot.py irc.rizon.net channel ModBot modbotisawesome
+</code></pre>
 
 Would connect to the channel '#channel', with the nickname 'ModBot', and identify with nickServ (if your specified nick is registered).
 
