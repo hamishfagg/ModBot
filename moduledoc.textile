@@ -1,28 +1,28 @@
-### ModBot Module-Writing Readme V0.0000000000000000000000001 ###
+--- ModBot Module-Writing Readme V0.0000000000000000000000001 ---
 
 Firstly, modules are loaded by ModBot by creating an instance of the 'Module' class and storing references to it. For this reason, your module MUST have a class called 'Module'. All commands and hooks are run inside this class. You can define it like this:
 <pre><code>
 class Module():
 
-&#09;# Methods and shit go here
+p(.# Methods and shit go here
 </code></pre>
 
 Inside the Module class, you have some options to better define what your module does, and what it depends on.
 
 
-## DEPENDS ##
+-- DEPENDS --
 
 Firstly, there is the depends list. This is a list of other modules that yours depends on. For example if your module uses MySQL and logging, then you can define the MySQL and logging helper modules as dependancies like this:
 <pre><code>
 class Module():
-&#09;depends = ['log', 'mysql']
+p(.depends = ['log', 'mysql']
 </code></pre>
 
 When your module is loaded, ModBot will create references to all of the modules listed in depends inside your module. E.g. the MySQL module will be situated in self.mysql.
 
 
 
-## HOOKS ##
+-- HOOKS -
 
 Secondly, there are certain system hooks that MobBot allows your Module to react to. These are events like a message being posted in a channel, MobBot joining a chanel, a user joining a channel or a channel mode changing.
 To get the names of the hooks on offer, look at the twisted IRC documentation here: http://twistedmatrix.com/documents/8.2.0/api/twisted.words.protocols.irc.IRCClient.html
@@ -30,17 +30,17 @@ To get the names of the hooks on offer, look at the twisted IRC documentation he
 Most of the functions documented there are run as hooks (with the same names). To define a hook, simply create a dictionary object, use the hook name as the key, and the function that you would like to be run on that hook as the value. E.g:
 <pre><code>
 class Module():
-&#09;depends = ['log', 'mysql']
-&#09;hooks = {'privmsg': 'myPrivMsgFunction'}
+p(.depends = ['log', 'mysql']
+p(.hooks = {'privmsg': 'myPrivMsgFunction'}
 
-&#09;def myPrivMsgFunction(self, user, channel, message):
-&#09;&#09;pass # Do stuff
+p(.def myPrivMsgFunction(self, user, channel, message):
+p((.pass # Do stuff
 </code></pre>
 
 The code above will mean that the function 'myPrivMsgFunction' will be run when a message is either sent to the current channel, or a private message is sent to ModBot. The parameters seen in the above example are not the same for each hook, and you should check with the twisted documentation for the parameters sent with each hook, and what they contain.
 
 
-## COMMANDS ##
+-- COMMANDS --
 
 A command is similar to a hook in function, but is executed when a user says the command name prefixed with '!' in the channel. This is probably best demonstrated by extending our example:
 <pre><code>
