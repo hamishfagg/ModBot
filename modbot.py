@@ -1,4 +1,5 @@
 import sys
+import getpass
 sys.path.append("modules")
 from constants import *
 import log
@@ -140,6 +141,7 @@ class Bot(irc.IRCClient):
 		self.join(self.factory.channel)
 		if password != None and password != "":
 			self.msg('nickserv', "identify %s" % password, MSG_MAX)
+			password = None #get rid of the evidence
 		self.keepAlive()
 
 	## Called when the bot joins a channel.
@@ -277,6 +279,6 @@ if __name__ == "__main__":
 	chan = sys.argv[2]
 	network = sys.argv[1]
 	print "Nickserv Password (Enter for none):"
-	password = raw_input()
+	password = getpass.getpass()
 	reactor.connectSSL(network, 9999, BotFactory('#' + chan), ssl.ClientContextFactory())
 	reactor.run()
