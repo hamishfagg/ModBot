@@ -30,11 +30,11 @@ To get the names of the hooks on offer, look at the twisted IRC documentation he
 Most of the functions documented there are run as hooks (with the same names). To define a hook, simply create a dictionary object, use the hook name as the key, and the function that you would like to be run on that hook as the value. E.g:
 <pre><code>
 class Module():
-	depends = ['log', 'mysql']
-	hooks = {'privmsg': 'myPrivMsgFunction'}
+|depends = ['log', 'mysql']
+|hooks = {'privmsg': 'myPrivMsgFunction'}
 
-|||	def myPrivMsgFunction(self, user, channel, message):
-		pass # Do stuff
+|def myPrivMsgFunction(self, user, channel, message):
+||pass # Do stuff
 </code></pre>
 
 The code above will mean that the function 'myPrivMsgFunction' will be run when a message is either sent to the current channel, or a private message is sent to ModBot. The parameters seen in the above example are not the same for each hook, and you should check with the twisted documentation for the parameters sent with each hook, and what they contain.
@@ -45,15 +45,15 @@ The code above will mean that the function 'myPrivMsgFunction' will be run when 
 A command is similar to a hook in function, but is executed when a user says the command name prefixed with '!' in the channel. This is probably best demonstrated by extending our example:
 <pre><code>
 class Module():
-	depends = ['log', 'mysql']
-	hooks = {'privmsg': 'myPrivMsgFunction'}
-	commands = {'testcommand': 'myCmdFunction'}
+|depends = ['log', 'mysql']
+|hooks = {'privmsg': 'myPrivMsgFunction'}
+|commands = {'testcommand': 'myCmdFunction'}
 
-	def myPrivMsgFunction(self, user, channel, message):
-		pass # Do stuff
+|def myPrivMsgFunction(self, user, channel, message):
+|pass # Do stuff
 
-	def myCmdFunction(self, user, channel, args):
-		pass # Do stuff
+|def myCmdFunction(self, user, channel, args):
+||pass # Do stuff
 </code></pre>
 
 As you can see, the commands are defined in the same way as hooks. With the above code, the function 'myCmdFunction' will be run when a user says '!testcommand' followed by anything in the channel.
