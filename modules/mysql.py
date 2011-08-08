@@ -60,14 +60,15 @@ class Module():
 
 		query = self.unpack(conditions=conditions)
 		query[0] = 'SELECT %s FROM %s ' % (", ".join(fields), table) + query[0]
-		if order != None: query[0] += " ORDER BY %s" % order
-		if limit  != None: query[0] += "LIMIT %s" % limit
 
+		if order != None: query[0] += " ORDER BY %s" % order
+		if limit  != None: query[0] += " LIMIT %s" % limit
+	
 		self.cur.execute(query[0], query[1])
 
 		return self.cur.fetchall()
 
-	def execute(self, string, args):
+	def execute(self, string, args=None):
 		self.cur.execute(string, args)
 		return self.cur.fetchall()
 
@@ -83,6 +84,6 @@ class Module():
 			query += ' WHERE '
 			for key, value in conditions.items():
 				datalist.append(value)
-				query += '`'+key+'` = % AND '
+				query += '`'+key+'` = %s AND '
 			query = query[:-5]
 		return [query, datalist]

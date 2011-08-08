@@ -13,10 +13,11 @@ class Module():
 	def loaded(self):
 		self.mysql.connect('polls')
 		self.updateCurrent()
-		print self.current
 	
 	def updateCurrent(self):
-		self.current = self.mysql.execute("SELECT * FROM polls WHERE `closed` = 0 LIMIT 1")[0]
+		self.current = self.mysql.execute("SELECT * FROM polls WHERE `closed` = 0 LIMIT 1")
+		if len(self.current) == 0: self.current = None
+		else: self.current = self.current[0]
 
 	def poll(self, user, channel, args):
 		if self.current == None:
