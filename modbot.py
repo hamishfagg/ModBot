@@ -9,8 +9,6 @@ from twisted.internet import ssl, reactor, protocol
 from twisted.words.protocols import irc
 #from startup import *
 
-MSGHACK = 100000
-
 class Bot(irc.IRCClient):
 
 	nickname = sys.argv[3]
@@ -64,7 +62,7 @@ class Bot(irc.IRCClient):
 					function = getattr(self.modules[module]['module'], functionName)
 					function(*args)
 				except Exception,e:
-					self.say(self.factory.channel, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSGHACK)
+					self.say(self.factory.channel, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
 					self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
 
 	def runCmd(self, cmd, *args):
@@ -76,7 +74,7 @@ class Bot(irc.IRCClient):
 					function = getattr(self.modules[module]['module'], functionName)					
 					function(*args)
 				except Exception,e:
-					self.say(self.factory.channel, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSGHACK)
+					self.say(self.factory.channel, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
 					self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
 	
 	## Tries to load a given module name and handles any errors. If the module is already loaded, it uses 'reload' to reload the module.
@@ -87,38 +85,42 @@ class Bot(irc.IRCClient):
 		try:
 			if moduleName in sys.modules:
 				self.logger.log(LOG_DEBUG, "%s is in sys.modules - reloading" % moduleName)
-				#module = reload(sys.modules[moduleName])
+				module = reload(sys.modules[moduleName])
 			else:
 				module = __import__(moduleName)
-				module = module.Module() 		#Get an object containing the 'Module' class of the given module
-				module.main = self
+			module = module.Module() 		#Get an object containing the 'Module' class of the given module
+			module.main = self
 
-				# Check dependancies
-				if hasattr(module, 'depends'):
-					for depend in module.depends:
-						if depend in sys.modules:
-							self.logger.log(LOG_DEBUG, " - Dependancy '%s' is loaded" % depend)
-							setattr(module, depend, sys.modules[depend].Module())
-						else:
-							self.logger.log(LOG_ERROR, "Failed to load %s: A dependancy (%s) is not loaded." % (moduleName, depend))
-							self.msg(channel, "Couldn't load module \'%s\': A dependancy (%s) is not loaded." % (moduleName, depend), MSGHACK)
-							return
-				else:
-					self.logger.log(LOG_DEBUG, "No dependancies found.")
+			# Check dependancies
+			if hasattr(module, 'depends'):
+				for depend in module.depends:
+					if depend in sys.modules:
+						self.logger.log(LOG_DEBUG, " - Dependancy '%s' is loaded" % depend)
+						setattr(module, depend, sys.modules[depend].Module())
+					else:
+						self.logger.log(LOG_ERROR, "Failed to load %s: A dependancy (%s) is not loaded." % (moduleName, depend))
+						self.msg(channel, "Couldn't load module \'%s\': A dependancy (%s) is not loaded." % (moduleName, depend), MSG_MAX)
+						return
+			else:
+				self.logger.log(LOG_DEBUG, "No dependancies found.")
 			
 			self.modules[moduleName] = {'module': module}
 			self.modules[moduleName]['hooks'] = getattr(module, 'hooks', {})
 			self.modules[moduleName]['commands'] = getattr(module, 'commands', {})
 			
 			self.logger.log(LOG_INFO, "Module '%s' has been loaded." % moduleName)
-
+			
 			if self.inchannel: #Stop calls to 'msg' when startup modules are loaded
-				self.msg(channel, "%sLoaded module \'%s\'." % (self.colour, moduleName), MSGHACK)
-			self.runHook('loaded')
+				self.msg(channel, "%sLoaded module \'%s\'." % (self.colour, moduleName), MSG_MAX)
+			if hasattr(module, 'loaded'):
+				module.loaded()
 
 		except:
+			if self.modules.get(moduleName, None) != None: del self.modules[moduleName]
+			if sys.modules.get(moduleName, None) != None: del sys.modules[moduleName]
+
 			raise
-			if self.inchannel: self.msg(channel, "Couldn't load module \'%s\': %s" % (moduleName, str(sys.exc_info()[1])), MSGHACK)
+			if self.inchannel: self.msg(channel, "Couldn't load module \'%s\': %s" % (moduleName, str(sys.exc_info()[1])), MSG_MAX)
 			else: self.startupErr[moduleName] = sys.exc_info()[1]
 			self.logger.log(LOG_ERROR, "Error loading module '%s':\n%s" % (moduleName, "".join(traceback.format_tb(sys.exc_info()[2]))))
 
@@ -136,8 +138,8 @@ class Bot(irc.IRCClient):
 		self.connected = True
 		self.runHook("signedOn")
 		self.join(self.factory.channel)
-		if len(sys.argv) > 4:
-			self.msg('nickserv', "identify %s" % sys.argv[4], MSGHACK)
+		if password != None and password != "":
+			self.msg('nickserv', "identify %s" % password, MSG_MAX)
 		self.keepAlive()
 
 	## Called when the bot joins a channel.
@@ -147,9 +149,9 @@ class Bot(irc.IRCClient):
 		
 		#Report startup errors
 		if len(self.startupErr) != 0:
-			self.say(self.factory.channel, "Errors occured loading modules on startup:", MSGHACK)
+			self.say(self.factory.channel, "Errors occured loading modules on startup:", MSG_MAX)
 			for moduleName in self.startupErr:
-				self.say(self.factory.channel, "Couldn't load module \'%s\': %s" % (moduleName, self.startupErr[moduleName]), MSGHACK)
+				self.say(self.factory.channel, "Couldn't load module \'%s\': %s" % (moduleName, self.startupErr[moduleName]), MSG_MAX)
 				
 
 		#Build list of admins in the channel
@@ -170,7 +172,7 @@ class Bot(irc.IRCClient):
 		if user in self.admins:
 			self.admins.remove(user)
 		self.users.remove(user)
-		self.runHook("userLeft", user, channel)
+		self.runHook("userleft", user, channel)
 
 	## Called when the bot sees a user disconnect.
 	# @param user The user that has quit.
@@ -199,6 +201,9 @@ class Bot(irc.IRCClient):
 	def privmsg(self, user, channel, message):
 		userinfo = user.split('!', 1)
 		user = userinfo[0]
+		if channel == self.username: channel = user
+		self.runHook("privmsg", user, channel, message)
+
 		if channel == self.username: print 'PM: <%s> %s' % (user, message)
 		else: print '<%s> %s' % (user, message)
 		if channel == self.username: msgchannel = user
@@ -214,11 +219,11 @@ class Bot(irc.IRCClient):
 			if words[0] == '!unload':
 				for mod in words[1:]:
 					if self.modules.get(mod, None) == None:
-						self.msg(msgchannel, "Module \'%s\' wasn\'t loaded." % mod, MSGHACK)
+						self.msg(msgchannel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
 					else:
 						del self.modules[mod]
-						self.msg(msgchannel, "Module \'%s\' unloaded." % mod, MSGHACK)
-		self.runHook("privmsg", user, channel, message)
+						del sys.modules[mod]
+						self.msg(msgchannel, "Module \'%s\' unloaded." % mod, MSG_MAX)
 	
 	## Called when users or channel's modes are changed.
 	# @param user The user who instigated the change.
@@ -271,5 +276,7 @@ class BotFactory(protocol.ClientFactory):
 if __name__ == "__main__":
 	chan = sys.argv[2]
 	network = sys.argv[1]
+	print "Nickserv Password (Enter for none):"
+	password = raw_input()
 	reactor.connectSSL(network, 9999, BotFactory('#' + chan), ssl.ClientContextFactory())
 	reactor.run()
