@@ -33,7 +33,7 @@ class Module():
 	depends = ['log', 'mysql']
 	hooks = {'privmsg': 'myPrivMsgFunction'}
 
-	def myPrivMsgFunction(self, user, channel, message):
+|||	def myPrivMsgFunction(self, user, channel, message):
 		pass # Do stuff
 </code></pre>
 
