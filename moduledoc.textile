@@ -4,7 +4,7 @@ Firstly, modules are loaded by ModBot by creating an instance of the 'Module' cl
 <pre><code>
 class Module():
 
-	# Methods and shit go here
+&#09;# Methods and shit go here
 </code></pre>
 
 Inside the Module class, you have some options to better define what your module does, and what it depends on.
@@ -15,7 +15,7 @@ Inside the Module class, you have some options to better define what your module
 Firstly, there is the depends list. This is a list of other modules that yours depends on. For example if your module uses MySQL and logging, then you can define the MySQL and logging helper modules as dependancies like this:
 <pre><code>
 class Module():
-	depends = ['log', 'mysql']
+&#09;depends = ['log', 'mysql']
 </code></pre>
 
 When your module is loaded, ModBot will create references to all of the modules listed in depends inside your module. E.g. the MySQL module will be situated in self.mysql.
@@ -30,11 +30,11 @@ To get the names of the hooks on offer, look at the twisted IRC documentation he
 Most of the functions documented there are run as hooks (with the same names). To define a hook, simply create a dictionary object, use the hook name as the key, and the function that you would like to be run on that hook as the value. E.g:
 <pre><code>
 class Module():
-|depends = ['log', 'mysql']
-|hooks = {'privmsg': 'myPrivMsgFunction'}
+&#09;depends = ['log', 'mysql']
+&#09;hooks = {'privmsg': 'myPrivMsgFunction'}
 
-|def myPrivMsgFunction(self, user, channel, message):
-||pass # Do stuff
+&#09;def myPrivMsgFunction(self, user, channel, message):
+&#09;&#09;pass # Do stuff
 </code></pre>
 
 The code above will mean that the function 'myPrivMsgFunction' will be run when a message is either sent to the current channel, or a private message is sent to ModBot. The parameters seen in the above example are not the same for each hook, and you should check with the twisted documentation for the parameters sent with each hook, and what they contain.
