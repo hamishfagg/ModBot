@@ -1,4 +1,4 @@
---- ModBot Module-Writing Readme V0.0000000000000000000000001 ---
+*** ModBot Module-Writing Readme V0.0000000000000000000000001 ***
 
 Firstly, modules are loaded by ModBot by creating an instance of the 'Module' class and storing references to it. For this reason, your module MUST have a class called 'Module'. All commands and hooks are run inside this class. You can define it like this:
 <pre><code>
