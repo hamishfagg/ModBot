@@ -124,7 +124,7 @@ class Bot(irc.IRCClient):
 			self.logger.log(LOG_INFO, "Module '%s' has been loaded." % moduleName)
 			
 			if self.inchannel: #Stop calls to 'msg' when startup modules are loaded
-				self.msg(channel, "%sLoaded module \'%s\'." % (self.colour, moduleName), MSG_MAX)
+				self.msg(channel, "%sLoaded module \'%s\'." % (COLOUR_GREY, moduleName), MSG_MAX)
 			if hasattr(module, 'loaded'):
 				module.loaded()
 

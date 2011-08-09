@@ -51,9 +51,9 @@ class Module():
 			for i in range(5):
 				if i == len(quotes):
 					break
-				self.main.msg(channel, self.main.colour + quotes[i][2], MSG_MAX)
+				self.main.msg(channel, quotes[i][2], MSG_MAX)
 			if len(quotes) > 5:
-				self.main.msg(channel, "%sExceeded maximum search results. Try a more specific search" % self.main.colour, MSG_MAX)
+				self.main.msg(channel, "Exceeded maximum search results. Try a more specific search", MSG_MAX)
 
 	def randQuote(self, user, channel, args):
 		quote = self.mysql.find(order="rand()", limit=1)
@@ -66,22 +66,3 @@ class Module():
 			
 			if self.main.modules.get('twitter', None) != None:
 				pass
-
-	def privmsg(self, user, channel, message):
-		if channel == self.main.nickname:
-			channel = user
-		
-		words = message.split(' ', 1)
-		
-		if words[0] == '!sq' or words[0] == '!nq' or words[0] == '!storequote' or words[0] == '!newquote':
-			print user
-			if user in self.main.admins:
-				try:
-					self.cur.execute("""INSERT INTO `quotes` (`user`, `quote`, `created`) VALUES (%s, %s, CURRENT_TIMESTAMP)""",  (user, words[1]))
-					self.main.msg(self.main.factory.channel, "%sQuote saved successfully." % self.main.colour, MSG_MAX)
-					if self.main.modules.get('twitter', None) != None:
-						self.main.modules['twitter'].tweetQuote(words[1])
-				except:
-					self.main.msg(self.main.factory.channel, "%sAn error occured saving that quote: %s" % (self.main.colour, str(sys.exc_info()[1])) , MSG_MAX)
-			else:
-				self.main.msg(self.main.factory.channel, "%sYou're not an admin." % self.main.colour, MSG_MAX)
