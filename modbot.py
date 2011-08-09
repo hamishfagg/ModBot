@@ -219,15 +219,16 @@ class Bot(irc.IRCClient):
 	# @param channel The channel that the message was sent to. Will be te bot's username if the message was a private message.
 	# @param message The message, derp.
 	def privmsg(self, user, channel, message):
-		userinfo = user.split('!', 1)
-		user = userinfo[0]
-		if channel == self.username: channel = user
+		user, self.host = user.split('!', 1)
+
+		if channel == self.nick:
+			self.channel = channel
+			channel = user
 		self.runHook("privmsg", user, channel, message)
 
-		if channel == self.username: print 'PM: <%s> %s' % (user, message)
-		else: print '<%s> %s' % (user, message)
-		if channel == self.username: msgchannel = user
-		else: msgchannel = channel
+		if channel == user: self.logger.log(LOG_DEBUG, "PM: <%s> %s" % (user, message))
+		else: self.logger.log(LOG_DEBUG, '<%s> %s' % (user, message))
+
 		self.host = userinfo[1].lower()
 		words = message.split()
 		if words[0].startswith('!'):
@@ -235,15 +236,15 @@ class Bot(irc.IRCClient):
 		if user in self.channels[channel]['admins']:
 			if words[0] == '!load':
 				for mod in words[1:]:
-					self.loadModule(mod, msgchannel)
+					self.loadModule(mod, channel)
 			if words[0] == '!unload':
 				for mod in words[1:]:
 					if self.modules.get(mod, None) == None:
-						self.msg(msgchannel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
+						self.msg(channel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
 					else:
 						del self.modules[mod]
 						del sys.modules[mod]
-						self.msg(msgchannel, "Module \'%s\' unloaded." % mod, MSG_MAX)
+						self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
 	
 	## Called when users or channel's modes are changed.
 	# @param user The user who instigated the change.
