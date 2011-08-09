@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Module():
 
-	depends = ['log', 'mysql']
+	depends = ['logger', 'mysql']
 	hooks = {'loaded': 'loaded'}
 	commands = {'closepoll': 'closePoll',
 				'poll': 'poll',

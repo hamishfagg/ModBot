@@ -3,7 +3,7 @@ from constants import *
 
 class Module():
 
-	depends = ['mysql', 'log']
+	depends = ['mysql', 'logger']
 	commands = {'q': 		'quote',
 				'quote':	'quote',
 				'rq':		'randQuote',
@@ -38,7 +38,7 @@ class Module():
 	
 	def loaded(self):
 		if 'twitter' not in sys.modules:
-			self.log.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded")
+			self.logger.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded")
 		self.mysql.connect('quotes')
 	
 	def quote(self, user, channel, args):

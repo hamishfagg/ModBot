@@ -12,7 +12,7 @@ from constants import *
 
 class Module():
 	commands = {'exec': 'execute'}
-	depends = ['log']
+	depends = ['logger']
 	help = {
 		'desc': 'executes a python statement inside the exec module.',
 		'exec': {
@@ -28,7 +28,7 @@ class Module():
 		if user in self.main.admins:
 			cmd = " ".join(args)
 			self.channel = channel
-			self.log.log(LOG_WARNING, "%s is executing: %s" % (user, cmd))
+			self.logger.log(LOG_WARNING, "%s is executing: %s" % (user, cmd))
 			exec cmd
 
 	def say(self, msg):

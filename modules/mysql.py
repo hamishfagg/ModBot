@@ -3,7 +3,7 @@ from mysqlconf import *
 from constants import *
 
 class Module():
-	depends = ['log']
+	depends = ['logger']
 
 	def connect(self, table):
 		self.table = table

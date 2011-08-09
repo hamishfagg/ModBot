@@ -3,7 +3,7 @@ import twitterhandler
 
 class Module():
 
-	depends = ['log']
+	depends = ['logger']
 	commands = {'tweet': 'tweet'}
 	help = {
 		'desc': 'tweets things from chan to the ChaosTheory twitter account - ChaosTheoryServ',
