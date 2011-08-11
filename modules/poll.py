@@ -28,11 +28,12 @@ class Module():
 			self.main.say(channel, "Type '!vote yes' or '!vote no' to vote.", MSG_MAX)
 
 	def closePoll(self, user, channel, args):
+		self.mysql.update(data={'closed': datetime.now()}, conditions={'id': self.current[0]})
 		if self.current != None:
-			self.mysql.update(data={'closed': datetime.now()}, conditions={'id': self.current[0]})
-			self.main.say(self.main.factory.channel, "The poll has been closed!", MSG_MAX)
-			self.main.say(self.main.factory.channel, self.current[2], MSG_MAX)
-			self.main.say(self.main.factory.channel, "Results:%s %s%s votes to%s %s%s." % (COLOUR_GREEN, str(self.current[3]), COLOUR_DEFAULT, COLOUR_RED, str(self.current[4]), COLOUR_DEFAULT), MSG_MAX)
+			for channel in self.main.channels:
+				self.main.say(channel, "The poll has been closed!", MSG_MAX)
+				self.main.say(channel, self.current[2], MSG_MAX)
+				self.main.say(channel, "Results:%s %s%s votes to%s %s%s." % (COLOUR_GREEN, str(self.current[3]), COLOUR_DEFAULT, COLOUR_RED, str(self.current[4]), COLOUR_DEFAULT), MSG_MAX)
 			self.current = None
 		else:
 			self.main.msg(channel, "There is currently no poll.", MSG_MAX)
@@ -44,8 +45,9 @@ class Module():
 				self.closePoll(None, None, None)
 				self.mysql.insert(data={'user': user, 'poll': poll})
 				self.updateCurrent()
-				self.main.say(self.main.factory.channel, "There is a new poll: %s" % self.current[2], MSG_MAX)
-				self.main.say(self.main.factory.channel, "Type '!vote yes' or '!vote no' to vote.", MSG_MAX)
+				for channel in self.channels:
+					self.main.say(channel, "There is a new poll: %s" % self.current[2], MSG_MAX)
+					self.main.say(channel, "Type '!vote yes' or '!vote no' to vote.", MSG_MAX)
 
 	def vote(self, user, channel, args):
 		if self.current == None:

@@ -60,7 +60,7 @@ class Module():
 		self.main.msg(channel, quote[0][2], MSG_MAX)
 
 	def newQuote(self, user, channel, args):
-		if user in self.main.admins:
+		if user in self.main.channels[channel]['admins']:
 			self.mysql.insert(data={'user': user, 'quote': " ".join(args)})
 			self.main.msg(channel, "Quote was saved successfully", MSG_MAX)
 			

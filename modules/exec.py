@@ -5,6 +5,8 @@ This module allows you to execute python code directly from IRC.
 While it is useful for debugging and only able to be used by admins, it is still VERY dangerous.
 
 So, it's not loaded by default and I would advise strongly against doing that. Only load it when you need it.
+
+#####################
 """
 
 
@@ -24,8 +26,7 @@ class Module():
 	}
 
 	def execute(self, user, channel, args):
-
-		if user in self.main.admins:
+		if user in self.main.channels[channel]['admins']:
 			cmd = " ".join(args)
 			self.channel = channel
 			self.logger.log(LOG_WARNING, "%s is executing: %s" % (user, cmd))
