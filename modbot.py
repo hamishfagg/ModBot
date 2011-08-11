@@ -200,9 +200,11 @@ class Bot(irc.IRCClient):
 		user = user.split('!', 1)[0]
 		self.logger.log(LOG_INFO, "User '%s' has quit: %s." % (user, quitMessage))
 
-		if user in self.channels[channel]['admins']:
-			self.channels[channel]['admins'].remove(user)
-		self.channels[channel]['users'].remove(user)
+		for channel in self.channels:
+			if user in self.channels[channel]['admins']:
+				self.channels[channel]['admins'].remove(user)
+			if user in self.channels[channel]['users']:
+				self.channels[channel]['users'].remove(user)
 		self.runHook("userquit", user, quitMessage)
 
 	## Called when the bot sees a user join a channel that it is in.
@@ -229,7 +231,6 @@ class Bot(irc.IRCClient):
 		if channel == user: self.logger.log(LOG_DEBUG, "PM: <%s> %s" % (user, message))
 		else: self.logger.log(LOG_DEBUG, '<%s> %s' % (user, message))
 
-		self.host = userinfo[1].lower()
 		words = message.split()
 		if words[0].startswith('!'):
 			self.runCmd(words[0][1:], user, channel, words[1:])
