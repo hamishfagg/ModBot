@@ -35,6 +35,6 @@ class Module():
 	def noticed(self, user, channel, message):
 		words = message.split()
 		if user.split('!', 1)[0] == 'NickServ' and words[0] == 'STATUS' and words[2] == '3':
-			print "MODE"
-			self.main.mode(None, True, 'v', user= words[1])
+			for channel in self.main.channels:
+				self.main.mode(channel, True, 'v', user=words[1])
 
