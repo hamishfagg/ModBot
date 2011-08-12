@@ -24,7 +24,7 @@ class Bot(irc.IRCClient):
 		self.logger = logger.Module()
 		
 		self.nick = sys.argv[3]
-		self.channels = {sys.argv[2]: {'admins': [], 'users': []}}
+		self.channels = {}
 		self.modules = {}
 		self.startupErr = {}
 
@@ -212,7 +212,7 @@ class Bot(irc.IRCClient):
 	# @param channel The channel that the user has joined.
 	def userJoined(self, user, channel):
 		user = user.split('!', 1)[0]
-		self.logger.log(LOG_INFO, "User '%s' has joined %s." % (user, "\#" + channel))
+		self.logger.log(LOG_INFO, "User '%s' has joined %s." % (user, channel))
 		self.channels[channel]['users'].append(user)
 		self.runHook("userjoined", user, channel)
 
