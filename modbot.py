@@ -270,10 +270,7 @@ class Bot(irc.IRCClient):
 		self.logger.log(LOG_INFO, "Nick changed to %s." % nick)
 		self.runHook("nickchanged", nick)
 
-	def irc_NICK(self, prefix, params):
-		oldnick = prefix.split('!', 1)[0]
-		newnick = params[0]
-
+	def userRenamed(self, oldnick, newnick):
 		for channel, chaninfo in self.channels.items():
 			if oldnick in chaninfo['users']:
 				chaninfo['users'].append(newnick)
