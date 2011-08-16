@@ -143,7 +143,7 @@ class Bot(irc.IRCClient):
 	# @param user The user that the notice came from.
 	# @param channel The channel that the notice was sent to. Will be the bot's username if the notice was sent to the bot directly and not to a channel
 	def noticed(self, user, channel, message):
-		print 'NOTICE: <%s> %s' % (user, message)
+		self.logger.log(LOG_DEBUG, "Notice: %s" % message)
 		self.runHook("noticed", user, channel, message)
 
 	## Called when the bot signs on to a server.
@@ -153,7 +153,6 @@ class Bot(irc.IRCClient):
 		self.join(sys.argv[2])
 		
 		global password
-		print password
 		if password != None and password != "":
 			self.msg('nickserv', "identify %s" % password, MSG_MAX)
 			password = None #get rid of the evidence
@@ -263,6 +262,13 @@ class Bot(irc.IRCClient):
 				for username in args:
 					self.channels[channel]['admins'].remove(username)
 		self.runHook("modechanged", user, channel, set, modes, args)
+
+	def nickChanged(self, nick):
+		self.logger.log(LOG_INFO, "Nick changed to %s." % nick)
+		self.runHook("nickchanged", nick)
+
+	def irc_NICK(self, prefix, params):
+		self.runHook("irc_nick", prefix, params)
 
 	## A function to check the liveness of the socket. This is MEANT to be implemented in twisted.
 	def keepAlive(self):
