@@ -268,6 +268,13 @@ class Bot(irc.IRCClient):
 		self.runHook("nickchanged", nick)
 
 	def irc_NICK(self, prefix, params):
+		oldnick = prefix.split('!', 1)[0]
+		newnick = params[0]
+
+		for channel, chaninfo in self.channels.items():
+			if oldnick in chaninfo['users']:
+				chaninfo['users'].append(newnick)
+				chaninfo['users'].remove(oldnick)
 		self.runHook("irc_nick", prefix, params)
 
 	## A function to check the liveness of the socket. This is MEANT to be implemented in twisted.
