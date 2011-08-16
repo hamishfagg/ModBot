@@ -71,8 +71,11 @@ class Bot(irc.IRCClient):
 				except Exception,e:
 					# Print the error to a channel if the hook came from a specific one
 					for arg in args:
-						if arg in self.channels:
-							self.say(self.channels, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
+						try:
+							if arg in self.channels:
+								self.say(self.channels, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
+						except:
+							pass
 					self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
 
 	def runCmd(self, cmd, *args):
