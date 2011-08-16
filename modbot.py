@@ -23,7 +23,6 @@ class Bot(irc.IRCClient):
 	def __init__(self):
 		self.logger = logger.Module()
 		
-		self.nick = sys.argv[3]
 		self.channels = {}
 		self.modules = {}
 		self.startupErr = {}
@@ -225,7 +224,7 @@ class Bot(irc.IRCClient):
 	def privmsg(self, user, channel, message):
 		user, self.host = user.split('!', 1)
 
-		if channel == self.nick:
+		if channel == self.nickname:
 			self.channel = channel
 			channel = user
 		self.runHook("privmsg", user, channel, message)
