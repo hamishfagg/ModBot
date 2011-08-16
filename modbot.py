@@ -275,7 +275,7 @@ class Bot(irc.IRCClient):
 			if oldnick in chaninfo['users']:
 				chaninfo['users'].append(newnick)
 				chaninfo['users'].remove(oldnick)
-		self.runHook("userrenamed", prefix, params)
+		self.runHook("userrenamed", oldnick, newnick)
 
 	## A function to check the liveness of the socket. This is MEANT to be implemented in twisted.
 	def keepAlive(self):
