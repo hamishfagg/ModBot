@@ -76,7 +76,7 @@ class Bot(irc.IRCClient):
 					for arg in args:
 						try:
 							if arg in self.channels:
-								self.say(self.channels, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
+								self.say(arg, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
 						except:
 							pass
 					self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
@@ -92,8 +92,11 @@ class Bot(irc.IRCClient):
 				except Exception,e:
 					# Print the error to whatever channel the command came from
 					for arg in args:
-						if arg in self.channels:
-							self.say(arg, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
+						try:
+							if arg in self.channels:
+								self.say(arg, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
+						except:
+							pass
 					self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
 	
 	## Tries to load a given module name and handles any errors. If the module is already loaded, it uses 'reload' to reload the module.
