@@ -47,6 +47,7 @@ class Bot(irc.IRCClient):
 		if nargs[1][6].endswith('~') or nargs[1][6].endswith('&') or nargs[1][6].endswith('@'):
        			self.channels[self.joining]['admins'].append(nargs[1][5])
 		self.channels[self.joining]['users'].append(nargs[1][5])
+		self.runHook("irc_rpl_whoreply", *nargs)
 
 	## Called when WHO output is complete.
 	# @param nargs A list of arguments including modes etc. See twisted documentation for details.
@@ -54,7 +55,10 @@ class Bot(irc.IRCClient):
 		self.logger.log(LOG_INFO, "Finished Joining.\n\t\t\t\tFound users: %s.\n\t\t\t\tFound admins: %s" % (", ".join(self.channels[self.joining]['users']), ", ".join(self.channels[self.joining]['admins'])))
 		self.runHook("joined", self.joining) #This is to stop the hook being run before user lists are populated
 		del self.joining
+		self.runHook("irc_rpl_endofwho", *nargs)
 
+	def topicUpdated(self, user, channel, newTopic):
+		self.runHook("topicupdated", user, channel, newTopic)
 		
 	## Runs a given function in all loaded modules. Handles any resulting errors.
 	# @param hook The name of the hook to be run. This is a name of a function in the irc.IRCClient class and also the name of the method from which this one will be called in this case.
@@ -146,6 +150,7 @@ class Bot(irc.IRCClient):
 	# @param channel The channel that the notice was sent to. Will be the bot's username if the notice was sent to the bot directly and not to a channel
 	def noticed(self, user, channel, message):
 		self.logger.log(LOG_DEBUG, "Notice: %s" % message)
+		self.topic('#chaostheory')
 		self.runHook("noticed", user, channel, message)
 
 	## Called when the bot signs on to a server.
