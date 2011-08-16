@@ -185,7 +185,12 @@ class Bot(irc.IRCClient):
 	## Called when the bot leaves a channel
 	# @param channel The channel that the bot has left.
 	def left(self, channel):
+		del self.channels[channel]
 		self.runHook("left", channel)
+	
+	def kickedFrom(self, channel, kicker, message):
+		self.runHook("kickedfrom", channel, kicker, message)
+		del self.channels[channel]
 
 	## Called when a user leaves a channel that the bot is in.
 	# @param user The user that has left 'channel'.
