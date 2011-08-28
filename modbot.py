@@ -3,7 +3,7 @@ import getpass
 
 sys.path.append("modules")
 from constants import *
-#from settings import *
+import ConfigParser
 #from startup import *
 import logger
 
@@ -14,10 +14,13 @@ import traceback
 from twisted.internet import ssl, reactor, protocol
 from twisted.words.protocols import irc
 
+nick = ''
+port = 0
+network = ''
+usessl = False
+channels = []
 
 class Bot(irc.IRCClient):
-
-	nickname = sys.argv[3]
 
 	## Instance init.
 	def __init__(self):
@@ -29,6 +32,7 @@ class Bot(irc.IRCClient):
 
 		self.inchannel = False
 		self.connected = False
+		self.nickname = nick
 		#for mod in startup:
 		#	self.loadModule(mod, None)
 	
@@ -160,7 +164,9 @@ class Bot(irc.IRCClient):
 	def signedOn(self):
 		self.connected = True
 		self.runHook("signedOn")
-		self.join(sys.argv[2])
+
+		global channels
+		for channel in channels: self.join(channel)
 		
 		global password
 		if password != None and password != "":
@@ -316,11 +322,36 @@ class BotFactory(protocol.ClientFactory):
 	def clientConnectionFailed(self, connector, reason):
 		print "Could not connect: %s" % (reason,)
 
+
+def configure():
+	config = ConfigParser.SafeConfigParser()
+	config.read('settings.conf')
+
+	global nick
+	nick = config.get('Required', 'nickname')
+
+	global network
+	network = config.get('Required', 'network')
+
+	global port
+	port = config.getint('Required', 'port')
+
+	global usessl
+	if config.has_option('Misc', 'use_ssl'):
+		usessl = config.getboolean('Misc', 'use_ssl')
+
+	global channels
+	if config.has_option('Misc', 'channels'): channels = config.get('Misc', 'channels').split()
+		
+
 if __name__ == "__main__":
-	
+
+	configure()
 	print "Nickserv Password (Enter for none):"
 	password = getpass.getpass()
 
-	network = sys.argv[1]
-	reactor.connectSSL(network, 9999, BotFactory(), ssl.ClientContextFactory())
+	print "Connecting to %s on port %s with nick '%s'" % (network, port, nick)
+
+	if usessl: reactor.connectSSL(network, port, BotFactory(), ssl.ClientContextFactory())
+	else: reactor.connectTCP(network, port, BotFactory())
 	reactor.run()

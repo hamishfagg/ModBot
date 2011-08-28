@@ -1,0 +1,23 @@
+[Required]
+
+# The bot's desired nickname
+nickname: ModBot
+
+# The IRC network url to connect to
+network: irc.network.net
+
+# Port to use
+port: 6667
+
+# Can be: LOG_DEBUG, LOG_INFO, LOG_WARNING or LOG_ERROR
+log_level: LOG_INFO
+
+
+
+[Misc]
+
+# Use ssl to connect to the specified server
+use_ssl: no
+
+# Channels to connect to at startup. Space-delimited
+channels: 
