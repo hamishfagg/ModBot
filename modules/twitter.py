@@ -17,7 +17,7 @@ class Module():
 
 	def tweet(self, user, channel, args):
 		tweet = " ".join(args)
-		if user in self.main.admins:
+		if user in self.main.channels[channel]['admins']:
 			if len(tweet) > 140:
 				self.main.say(channel, "Tweet too long, please shorten it by %s characters." % (len(tweet) - 140), MSG_MAX)
 			else:	
