@@ -11,8 +11,9 @@ url = 'http://bajor.omegle.com/%s'
 DEBUG = 1
 
 class Omegle:
-	def __init__(self, mod, index):
+	def __init__(self, mod, channel, index):
 		self.mod = mod
+		self.channel = channel
 		self.id = None
 		self.challenge = None
 		self.ready = False
@@ -20,10 +21,16 @@ class Omegle:
 
 
 	def get(self, page, data='', callback='event'):
+		print "Getting %s" % page
 		getPage(url % page, method="POST", postdata=data, headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}).addCallback(getattr(self, callback))
+
+	def getEvents(self):
+		deff = reactor.callFromThread(getPage, url % "events", {'method': 'POST', 'postdata': 'id=%s' % self.id, 'headers': {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}})
+		deff.addCallback(getAttr(self, 'event'))
 
 	def connect(self, data=None):
 		if data == None:
+			print 'connecting'
 			self.get('start/?rcs=1&spid=', '', 'connect')
 		
 		elif data[0] == '"' and data[-1] == '"':
@@ -39,41 +46,42 @@ class Omegle:
 			#print data
 			for event in events:
 				if event[0] == 'connected':
+					print 'connnected'
 					if self.challenge != None:
-						self.mod.on_recaptchaResponse(self.index, True)
+						self.mod.on_recaptchaResponse(self.channel, self.index, True)
 						self.challenge = None
-					self.mod.on_connected(self.index)
+					self.mod.on_connected(self.channel, self.index)
 			
 				elif event[0] == 'gotMessage':
-					self.mod.on_message(self.index, event[1])
+					self.mod.on_message(self.channel, self.index, event[1])
 			
 				elif event[0] == 'typing':
-					self.mod.on_typing(self.index)
+					self.mod.on_typing(self.channel, self.index)
 
 				elif event[0] == 'stoppedTyping':
-					self.mod.on_stoppedTyping(self.index)
+					self.mod.on_stoppedTyping(self.channel, self.index)
 
 				elif event[0] == 'strangerDisconnected':
 					self.id = None
-					self.mod.on_disconnected(self.index, 'peer')
+					self.mod.on_disconnected(self.channel, self.index, 'peer')
 
 				elif event[0] == 'recaptchaRequired':
 					getPage("http://www.google.com/recaptcha/api/challenge?k=" + str(event[1])).addCallback(self.recaptcha)
 
 				elif event[0] == 'recaptchaRejected':
-					self.mod.on_recaptchaResponse(self.index, False)
+					self.mod.on_recaptchaResponse(self.channel, self.index, False)
 					getPage("http://www.google.com/recaptcha/api/challenge?k=" + str(event[1])).addCallback(self.recaptcha)
 
 
 		elif data == 'win' and self.challenge != None:
-			self.mod.on_recaptchaResponse(self.index, True)
+			self.mod.on_recaptchaResponse(self.channel, self.index, True)
 			self.challenge = None
 
 		self.ready = True
 
 	def recaptcha(self, data):
 		if data.find('http://goo.gl') != -1:
-			self.mod.on_recaptcha(self.index, data[data.index('"id"'):].split('"')[3])
+			self.mod.on_recaptcha(self.channel, self.index, data[data.index('"id"'):].split('"')[3])
 		else:
 			self.challenge = data[data.index('challenge'):].split('\'')[1]
 			url = '{"longUrl": "http://www.google.com/recaptcha/api/image?c=%s"}' % self.challenge
@@ -101,7 +109,7 @@ class Omegle:
 		if data == 'win':
 			print 'Disconnected'
 			self.id = None
-			self.mod.on_disconnected(self.index, 'user')
+			self.mod.on_disconnected(self.channel, self.index, 'user')
 		else: print 'ERROR DISCONNECTING'
 	
 	def loop(self):
@@ -109,7 +117,8 @@ class Omegle:
 			while self.id != None:
 				if self.ready:
 					#print 'GETTING EVENTS'
-					self.get('events', 'id=%s' % self.id, 'event')
+					#self.getEvents()
+					reactor.callFromThread(self.get, 'events', 'id=%s' % self.id, 'event')
 					self.ready = False
 				time.sleep(1)
 
