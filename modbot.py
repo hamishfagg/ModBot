@@ -62,6 +62,7 @@ class Bot(irc.IRCClient):
 		self.runHook("irc_rpl_endofwho", *nargs)
 
 	def topicUpdated(self, user, channel, newTopic):
+		print "TOPIC: %s %s %s" % (user, channel, newTopic)
 		self.runHook("topicupdated", user, channel, newTopic)
 		
 	## Runs a given function in all loaded modules. Handles any resulting errors.
@@ -157,7 +158,6 @@ class Bot(irc.IRCClient):
 	# @param channel The channel that the notice was sent to. Will be the bot's username if the notice was sent to the bot directly and not to a channel
 	def noticed(self, user, channel, message):
 		self.logger.log(LOG_DEBUG, "Notice: %s" % message)
-		self.topic('#chaostheory')
 		self.runHook("noticed", user, channel, message)
 
 	## Called when the bot signs on to a server.
@@ -266,6 +266,9 @@ class Bot(irc.IRCClient):
 						del self.modules[mod]
 						del sys.modules[mod]
 						self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
+
+	def action(self, user, channel, data):
+		self.runHook("action", user, channel, data)
 	
 	## Called when users or channel's modes are changed.
 	# @param user The user who instigated the change.
