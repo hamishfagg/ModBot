@@ -171,7 +171,6 @@ class Bot(irc.IRCClient):
 		global password
 		if password != None and password != "":
 			self.msg('nickserv', "identify %s" % password, MSG_MAX)
-			password = None #get rid of the evidence
 		self.keepAlive()
 
 	## Called when the bot joins a channel.
