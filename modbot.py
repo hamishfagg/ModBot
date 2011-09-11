@@ -83,7 +83,7 @@ class Bot(irc.IRCClient):
 								self.say(arg, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
 						except:
 							pass
-					self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
+					self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2])), str(sys.exc_info()[1])))
 
 	def runCmd(self, cmd, *args):
 		self.logger.log(LOG_DEBUG, "Running cmd %s" % cmd)
