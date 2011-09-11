@@ -4,7 +4,7 @@ import getpass
 sys.path.append("modules")
 from constants import *
 import ConfigParser
-#from startup import *
+from startup import *
 import logger
 
 import threading
@@ -33,8 +33,8 @@ class Bot(irc.IRCClient):
 		self.inchannel = False
 		self.connected = False
 		self.nickname = nick
-		#for mod in startup:
-		#	self.loadModule(mod, None)
+		for mod in startup:
+			self.loadModule(mod, None)
 	
 
 	""" ADMIN LIST HANDLING """
@@ -62,7 +62,6 @@ class Bot(irc.IRCClient):
 		self.runHook("irc_rpl_endofwho", *nargs)
 
 	def topicUpdated(self, user, channel, newTopic):
-		print "TOPIC: %s %s %s" % (user, channel, newTopic)
 		self.runHook("topicupdated", user, channel, newTopic)
 		
 	## Runs a given function in all loaded modules. Handles any resulting errors.
