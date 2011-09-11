@@ -16,21 +16,22 @@ class Module():
 		
 	def joined(self, channel):
 		for user in self.main.channels[channel]['users']:
-			if not (user in self.main.channels[channel]['admins']) and user != self.main.nick:
+			if not (user in self.main.channels[channel]['admins']) and user != self.main.nickname:
 				self.getStatus(user)
 
 	def userJoined(self, user, channel):
 		user = user.split('!', 1)[0]
-		if not (user in self.main.channels[channel]['admins']) and user != self.main.nick:
+		if not (user in self.main.channels[channel]['admins']) and user != self.main.nickname:
 			self.getStatus(user)
 
 	def modeChanged(self, user, channel, set, modes, args):
 		user = user.split('!', 1)[0]
-		if modes == 'r' and not (user in self.main.channels[channel]['admins']) and user != self.main.nick:
-			if set:
-				self.main.mode(channel, True, 'v', None, user)				
-			else:
-				self.main.mode(channel, False, 'v', None, user)
+		if channel in self.main.channels:
+			if modes == 'r' and not (user in self.main.channels[channel]['admins']) and user != self.main.nickname:
+				if set:
+					self.main.mode(channel, True, 'v', None, user)				
+				else:
+					self.main.mode(channel, False, 'v', None, user)
 
 	def noticed(self, user, channel, message):
 		words = message.split()
