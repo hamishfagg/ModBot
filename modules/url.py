@@ -1,5 +1,6 @@
 from constants import *
 import subprocess
+import simplejson
 from BeautifulSoup import BeautifulSoup
 
 class Module():
@@ -23,7 +24,27 @@ class Module():
 			args = message.split()
 			for arg in args:
 				if arg.startswith("http://") or arg.startswith("https://"): #this argument is a URL
-					output, err = subprocess.Popen("curl -L " + arg, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+					output, err = subprocess.Popen('curl -L "%s"' % arg, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 					soup = BeautifulSoup(output)
-					
-					self.main.msg(channel, soup.html.head.title.string.strip().encode('ascii').replace("\n", " "), MSG_MAX)
+					if hasattr(soup, "html") and hasattr(soup.html, "head") and hasattr(soup.html.head, "title"):
+						self.main.msg(channel, self.htmlEncode(soup.html.head.title.string.strip()).replace("\n", " "), MSG_MAX)
+					if arg[7:19].lower().find("youtube") and arg.lower().find("watch?"):
+						vindex = arg.find("v=")
+						if not vindex == -1:
+							end = arg.find("&", vindex)
+							if end == -1: end = len(arg)
+							id = arg[vindex+2:end]
+							self.printYoutubeDetails(channel, id)
+
+	def printYoutubeDetails(self, channel, id):
+		url = 'curl -L "http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc&prettyprint=true"' % id
+		output, err = subprocess.Popen(url, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		if output.startswith("{"): #It was probably a valid video id
+			details = simplejson.loads(output)
+			rating = "%sRating:%s%s %s%s /%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_GREEN, details['data']['likeCount'], COLOUR_DEFAULT, COLOUR_RED, details['data']['ratingCount']-int(details['data']['likeCount']), COLOUR_DEFAULT)
+			rating += "   ||  %s Views: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, details['data']['viewCount'])
+			self.main.msg(channel, rating.encode('ascii'), MSG_MAX)
+
+
+	def htmlEncode(self, html):
+		return html.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").encode('ascii')
