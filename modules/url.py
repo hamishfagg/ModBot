@@ -25,16 +25,20 @@ class Module():
 			for arg in args:
 				if arg.startswith("http://") or arg.startswith("https://"): #this argument is a URL
 					output, err = subprocess.Popen('curl -L "%s"' % arg, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-					soup = BeautifulSoup(output)
-					if hasattr(soup, "html") and hasattr(soup.html, "head") and hasattr(soup.html.head, "title"):
-						self.main.msg(channel, self.htmlEncode(soup.html.head.title.string.strip()).replace("\n", " "), MSG_MAX)
-					if arg[7:19].lower().find("youtube") and arg.lower().find("watch?"):
-						vindex = arg.find("v=")
-						if not vindex == -1:
-							end = arg.find("&", vindex)
-							if end == -1: end = len(arg)
-							id = arg[vindex+2:end]
-							self.printYoutubeDetails(channel, id)
+					try:
+						output = output.encode('ascii', 'ignore')
+						soup = BeautifulSoup(output)
+						if hasattr(soup, "html") and hasattr(soup.html, "head") and hasattr(soup.html.head, "title"):
+							self.main.msg(channel, self.htmlEncode(soup.html.head.title.string.strip()).replace("\n", " "), MSG_MAX)
+						if arg[7:19].lower().find("youtube") and arg.lower().find("watch?"):
+							vindex = arg.find("v=")
+							if not vindex == -1:
+								end = arg.find("&", vindex)
+								if end == -1: end = len(arg)
+								id = arg[vindex+2:end]
+								self.printYoutubeDetails(channel, id)
+					except:
+						pass
 
 	def printYoutubeDetails(self, channel, id):
 		url = 'curl -L "http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc&prettyprint=true"' % id
@@ -43,8 +47,8 @@ class Module():
 			details = simplejson.loads(output)
 			rating = "%sRating:%s%s %s%s /%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_GREEN, details['data']['likeCount'], COLOUR_DEFAULT, COLOUR_RED, details['data']['ratingCount']-int(details['data']['likeCount']), COLOUR_DEFAULT)
 			rating += "   ||  %s Views: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, details['data']['viewCount'])
-			self.main.msg(channel, rating.encode('ascii'), MSG_MAX)
+			self.main.msg(channel, rating.encode('ascii', 'replace'), MSG_MAX)
 
 
 	def htmlEncode(self, html):
-		return html.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").replace('&laquo;', '').replace('&raquo;', '').encode('ascii')
+		return html.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").replace('&laquo;', '').replace('&raquo;', '').encode('ascii', errors='ignore')
