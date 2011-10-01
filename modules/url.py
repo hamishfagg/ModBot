@@ -47,4 +47,4 @@ class Module():
 
 
 	def htmlEncode(self, html):
-		return html.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").encode('ascii')
+		return html.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").replace('&laquo;', '').replace('&raquo;', '').encode('ascii')
