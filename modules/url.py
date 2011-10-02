@@ -26,7 +26,6 @@ class Module():
 				if arg.startswith("http://") or arg.startswith("https://"): #this argument is a URL
 					output, err = subprocess.Popen('curl -L "%s"' % arg, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 					try:
-						output = output.encode('ascii', 'ignore')
 						soup = BeautifulSoup(output)
 						if hasattr(soup, "html") and hasattr(soup.html, "head") and hasattr(soup.html.head, "title"):
 							self.main.msg(channel, self.htmlEncode(soup.html.head.title.string.strip()).replace("\n", " "), MSG_MAX)
@@ -37,8 +36,6 @@ class Module():
 								if end == -1: end = len(arg)
 								id = arg[vindex+2:end]
 								self.printYoutubeDetails(channel, id)
-					except:
-						pass
 
 	def printYoutubeDetails(self, channel, id):
 		url = 'curl -L "http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc&prettyprint=true"' % id
