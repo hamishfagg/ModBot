@@ -3,6 +3,8 @@ from datetime import datetime
 
 class Module():
 
+### NOTE: Polls are currently bot-wide. There is no separate poll per channel.
+
 	depends = ['logger', 'mysql']
 	hooks = {'loaded': 'loaded'}
 	commands = {'closepoll': 'closePoll',
@@ -30,22 +32,23 @@ class Module():
 	def closePoll(self, user, channel, args):
 		self.mysql.update(data={'closed': datetime.now()}, conditions={'id': self.current[0]})
 		if self.current != None:
-			for channel in self.main.channels:
-				self.main.say(channel, "The poll has been closed!", MSG_MAX)
-				self.main.say(channel, self.current[2], MSG_MAX)
-				self.main.say(channel, "Results:%s %s%s votes to%s %s%s." % (COLOUR_GREEN, str(self.current[3]), COLOUR_DEFAULT, COLOUR_RED, str(self.current[4]), COLOUR_DEFAULT), MSG_MAX)
+			for chan in self.main.channels:
+				self.main.say(chan, "The poll has been closed!", MSG_MAX)
+				self.main.say(chan, self.current[2], MSG_MAX)
+				self.main.say(chan, "Results:%s %s%s votes to%s %s%s." % (COLOUR_GREEN, str(self.current[3]), COLOUR_DEFAULT, COLOUR_RED, str(self.current[4]), COLOUR_DEFAULT), MSG_MAX)
 			self.current = None
 		else:
 			self.main.msg(channel, "There is currently no poll.", MSG_MAX)
 
 	def newPoll(self, user, channel, args):
 		poll = " ".join(args)
-		if user in self.main.admins:
+		if user in self.main.channels[channel]['admins']:
 			if len(poll) != 0:
-				self.closePoll(None, None, None)
+				if self.current != None: self.closePoll(None, None, None)
+				print 'poll'
 				self.mysql.insert(data={'user': user, 'poll': poll})
 				self.updateCurrent()
-				for channel in self.channels:
+				for channel in self.main.channels:
 					self.main.say(channel, "There is a new poll: %s" % self.current[2], MSG_MAX)
 					self.main.say(channel, "Type '!vote yes' or '!vote no' to vote.", MSG_MAX)
 
