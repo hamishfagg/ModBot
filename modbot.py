@@ -56,10 +56,15 @@ class Bot(irc.IRCClient):
 	## Called when WHO output is complete.
 	# @param nargs A list of arguments including modes etc. See twisted documentation for details.
 	def irc_RPL_ENDOFWHO(self, *nargs):
-		self.logger.log(LOG_INFO, "Finished Joining.\n\t\t\t\tFound users: %s.\n\t\t\t\tFound admins: %s" % (", ".join(self.channels[self.joining]['users']), ", ".join(self.channels[self.joining]['admins'])))
+		self.logger.log(LOG_INFO, "Finished Joining %s.\n\t\t\t\tFound users: %s.\n\t\t\t\tFound admins: %s" % (self.joining, ", ".join(self.channels[self.joining]['users']), ", ".join(self.channels[self.joining]['admins'])))
 		self.runHook("joined", self.joining) #This is to stop the hook being run before user lists are populated
-		del self.joining
 		self.runHook("irc_rpl_endofwho", *nargs)
+
+		global channels
+		channels.remove(self.joining)
+		if len(channels) != 0:
+			self.joining = channels[0]
+			self.join(self.joining)
 
 	def topicUpdated(self, user, channel, newTopic):
 		self.runHook("topicupdated", user, channel, newTopic)
@@ -101,7 +106,7 @@ class Bot(irc.IRCClient):
 								self.say(arg, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
 						except:
 							pass
-					self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2]))))
+					self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n%s\n%s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2])), sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
 	
 	## Tries to load a given module name and handles any errors. If the module is already loaded, it uses 'reload' to reload the module.
 	# @param moduleName The name of the module that should be looked for.
@@ -140,6 +145,7 @@ class Bot(irc.IRCClient):
 				self.msg(channel, "%sLoaded module \'%s\'." % (COLOUR_GREY, moduleName), MSG_MAX)
 			if hasattr(module, 'loaded'):
 				module.loaded()
+			self.runHook("moduleloaded", moduleName)
 
 		except:
 			if self.modules.get(moduleName, None) != None: del self.modules[moduleName]
@@ -165,7 +171,7 @@ class Bot(irc.IRCClient):
 		self.runHook("signedOn")
 
 		global channels
-		for channel in channels: self.join(channel)
+		self.join(channels[0])
 		
 		global password
 		if password != None and password != "":
@@ -252,18 +258,20 @@ class Bot(irc.IRCClient):
 		words = message.split()
 		if words[0].startswith('!'):
 			self.runCmd(words[0][1:], user, channel, words[1:])
-		if user in self.channels[channel]['admins']:
-			if words[0] == '!load':
-				for mod in words[1:]:
-					self.loadModule(mod, channel)
-			if words[0] == '!unload':
-				for mod in words[1:]:
-					if self.modules.get(mod, None) == None:
-						self.msg(channel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
-					else:
-						del self.modules[mod]
-						del sys.modules[mod]
-						self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
+		if channel in self.channels:
+			if user in self.channels[channel]['admins']:
+				if words[0] == '!load':
+					for mod in words[1:]:
+						self.loadModule(mod, channel)
+				if words[0] == '!unload':
+					for mod in words[1:]:
+						if self.modules.get(mod, None) == None:
+							self.msg(channel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
+						else:
+							del self.modules[mod]
+							del sys.modules[mod]
+							self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
+							self.runHook("moduleunloaded", mod)
 
 	def action(self, user, channel, data):
 		self.runHook("action", user, channel, data)
