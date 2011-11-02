@@ -97,12 +97,9 @@ class Bot(irc.IRCClient):
 			functionName = self.modules[module]['commands'].get(cmd, None)
 			if functionName != None:
 				try:
-					print 'getting function'
 					function = getattr(self.modules[module]['module'], functionName)					
-					print 'calling...'
 					function(*args)
 				except Exception,e:
-					print 'except'
 					# Print the error to whatever channel the command came from
 					self.say(args[1], "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
 					self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n%s\n%s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2])), sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
