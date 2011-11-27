@@ -1,11 +1,11 @@
 startup = [
-	'mysql',
-	'twitter',
-	'quote',
-	'poll',
-	'away',
-	'say',
-	'ranks',
-	'nope',
-	'url'
+    'mysql',
+    'twitter',
+    'quote',
+    'poll',
+    'away',
+    'say',
+    'ranks',
+    'nope',
+    'url'
 ]

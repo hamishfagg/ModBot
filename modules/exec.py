@@ -13,24 +13,24 @@ So, it's not loaded by default and I would advise strongly against doing that. O
 from constants import *
 
 class Module():
-	commands = {'exec': 'execute'}
-	depends = ['logger']
-	help = {
-		'desc': 'executes a python statement inside the exec module.',
-		'exec': {
-			'desc': 'executes a given statement.',
-			'params': {
-				'statement': 'A python statement to execute. For ease of use, self.say refers to a method for printing to the current channel which takes a string argument.'
-			}
-		}
-	}
+    commands = {'exec': 'execute'}
+    depends = ['logger']
+    help = {
+        'desc': 'executes a python statement inside the exec module.',
+        'exec': {
+            'desc': 'executes a given statement.',
+            'params': {
+                'statement': 'A python statement to execute. For ease of use, self.say refers to a method for printing to the current channel which takes a string argument.'
+            }
+        }
+    }
 
-	def execute(self, user, channel, args):
-		if user in self.main.channels[channel]['admins']:
-			cmd = " ".join(args)
-			self.channel = channel
-			self.logger.log(LOG_WARNING, "%s is executing: %s" % (user, cmd))
-			exec cmd
+    def execute(self, user, channel, args):
+        if user in self.main.channels[channel]['admins']:
+            cmd = " ".join(args)
+            self.channel = channel
+            self.logger.log(LOG_WARNING, "%s is executing: %s" % (user, cmd))
+            exec cmd
 
-	def say(self, msg):
-		self.main.msg(self.channel, msg, MSG_MAX)
+    def say(self, msg):
+        self.main.msg(self.channel, msg, MSG_MAX)
