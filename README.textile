@@ -1,20 +1,21 @@
-ModBot V 2.0.0
+ModBot V 2.0.1
 
 ModBot is a modular IRC bot written in Python (2.7).
 It is built with ease of use in mind - whether that use be from the end user, someone writing a plugin, or someone editing existing parts of the bot.
 
 The main class in modbot.py provides the most basic of functions (loading plugins and running hooks), while plugins provide all other end-user functionality.
 
-Modbot currently takes 3 arguments - network, channel (without leading '#') and nickname.
-I am looking at providing a settings file that will remove the need for these parameters as well as add some more features.
+To configure Modbot:
 
-E.g.
+1: Copy/move settings.conf.default to settings.conf and configure to your liking.
+2: Go to the modules folder and do the same for any module configs that you wish to use.
+3: Edit startup.py to contain all of the modules you want to be loaded on startup.
 
+Then you are able to run Modbot:
 <pre><code>
-python2 modbot.py irc.ircserver.net channel ModBot
+python2 modbot.py
 </code></pre>
 
-Would connect to 'ircserver' and join the channel '#channel', with the nickname 'ModBot'.
 Modbot will then ask for a NickServ password to identify with.
 
 
