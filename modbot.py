@@ -108,7 +108,7 @@ class Bot(irc.IRCClient):
     # @param moduleName The name of the module that should be looked for.
     # @param channel The channel to send a loaded/failed message to. Allows load commands sent in PM to be replied to in PM.
     def loadModule(self, moduleName, channel):
-        self.logger.log(LOG_DEBUG, "Attempting to load '%s'" % moduleName)
+        self.logger.log(LOG_DEBUG, "Attempting to load '%s' on %s" % (moduleName, channel))
         try:
             if moduleName in sys.modules:
                 self.logger.log(LOG_DEBUG, "%s is in sys.modules - reloading" % moduleName)
@@ -131,11 +131,11 @@ class Bot(irc.IRCClient):
             else:
                 self.logger.log(LOG_DEBUG, "No dependancies found.")
             
-            self.modules[moduleName] = {'module': module}
-            self.modules[moduleName]['hooks'] = getattr(module, 'hooks', {})
-            self.modules[moduleName]['commands'] = getattr(module, 'commands', {})
+            self.channels[channel]['modules'][moduleName] = {'module': module}
+            self.channels[channel]['modules'][moduleName]['hooks'] = getattr(module, 'hooks', {})
+            self.channels[channel]['modules'][moduleName]['commands'] = getattr(module, 'commands', {})
             
-            self.logger.log(LOG_INFO, "Module '%s' has been loaded." % moduleName)
+            self.logger.log(LOG_INFO, "Module '%s' has been loaded on %s." % (moduleName, channel))
             
             if self.inchannel: #Stop calls to 'msg' when startup modules are loaded
                 self.msg(channel, "%sLoaded module \'%s\'." % (COLOUR_GREY, moduleName), MSG_MAX)
@@ -144,7 +144,7 @@ class Bot(irc.IRCClient):
             self.runHook("moduleloaded", moduleName)
 
         except:
-            if self.modules.get(moduleName, None) != None: del self.modules[moduleName]
+            if self.channels[channel]['modules'].get(moduleName, None) != None: del self.channels[channel]['modules'][moduleName]
             if sys.modules.get(moduleName, None) != None: del sys.modules[moduleName]
 
             raise
@@ -243,33 +243,32 @@ class Bot(irc.IRCClient):
     def privmsg(self, user, channel, message):
         user, self.host = user.split('!', 1)
 
-        if channel == self.nickname:
-            self.channel = channel
-            channel = user
+        if channel == self.nickname: channel = user
         self.runHook("privmsg", user, channel, message)
 
         if channel == user: self.logger.log(LOG_DEBUG, "PM: <%s> %s" % (user, message))
-        else: self.logger.log(LOG_DEBUG, '<%s> %s' % (user, message))
+        else: self.logger.log(LOG_DEBUG, '%s: <%s> %s' % (channel, user, message))
 
         words = message.split()
         if words[0].startswith('!'):
             self.runCmd(words[0][1:], user, channel, words[1:])
         if channel in self.channels:
             if user in self.channels[channel]['admins']:
-                if words[0] == '!load':
+                if words[0] == '!load': # someone wants to load a module
                     for mod in words[1:]:
                         self.loadModule(mod, channel)
                 if words[0] == '!unload':
                     for mod in words[1:]:
-                        if self.modules.get(mod, None) == None:
+                        if self.channels[channel]['modules'].get(mod, None) == None:
                             self.msg(channel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
                         else:
-                            del self.modules[mod]
+                            del self.channels[channel]['modules'][mod]
                             del sys.modules[mod]
                             self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
                             self.runHook("moduleunloaded", mod)
 
     def action(self, user, channel, data):
+        if channel == self.nickname: channel = user
         self.runHook("action", user, channel, data)
     
     ## Called when users or channel's modes are changed.
@@ -279,7 +278,7 @@ class Bot(irc.IRCClient):
     # @param modes The mode or modes which are being changed.
     # @param args Any additional information required for the mode change.
     def modeChanged(self, user, channel, set, modes, args):
-        if (channel == channel) and (modes.startswith('q') or modes.startswith('a') or modes.startswith('o')):
+        if (channel in self.channels) and (modes.startswith('q') or modes.startswith('a') or modes.startswith('o')):
             if set:
                 for username in args:
                     if not username in self.channels[channel]['admins']:
@@ -289,10 +288,12 @@ class Bot(irc.IRCClient):
                     self.channels[channel]['admins'].remove(username)
         self.runHook("modechanged", user, channel, set, modes, args)
 
+    # modbot changed its nick
     def nickChanged(self, nick):
         self.logger.log(LOG_INFO, "Nick changed to %s." % nick)
         self.runHook("nickchanged", nick)
 
+    # user changes his/her nick
     def userRenamed(self, oldnick, newnick):
         for channel, chaninfo in self.channels.items():
             if oldnick in chaninfo['users']:
@@ -301,6 +302,7 @@ class Bot(irc.IRCClient):
         self.runHook("userrenamed", oldnick, newnick)
 
     ## A function to check the liveness of the socket. This is MEANT to be implemented in twisted.
+    ## Without it, modbot seems to ping periodically =\
     def keepAlive(self):
         def f():
             while self.connected:
