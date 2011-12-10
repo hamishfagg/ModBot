@@ -92,16 +92,26 @@ class Bot(irc.IRCClient):
                     self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2])), str(sys.exc_info()[1])))
 
     def runCmd(self, cmd, *args):
+        user = args[0]
+        channel = args[1]
+        words = args[2]
         self.logger.log(LOG_DEBUG, "Running cmd %s" % cmd)
-        for module in self.modules:
-            functionName = self.modules[module]['commands'].get(cmd, None)
+        if channel == user:
+            if words[0] in self.channels: channel = words[0]
+            else:
+                if words[0].startswith("#"): msg = "I'm not in %s" % words[0]
+                else: msg = "Usage in PM: !%s CHANNEL [ARGS]" % cmd
+                self.msg(channel, msg, MSG_MAX)
+                return
+        for module in self.channels[channel]['modules']:
+            functionName = self.channels[channel]['modules'][module]['commands'].get(cmd, None)
             if functionName != None:
                 try:
-                    function = getattr(self.modules[module]['module'], functionName)                    
+                    function = getattr(self.channels[channel]['modules'][module]['module'], functionName)                    
                     function(*args)
                 except Exception,e:
                     # Print the error to whatever channel the command came from
-                    self.say(args[1], "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
+                    self.say(channel, "Error running %s command in module %s: %s" % (cmd, module, str(sys.exc_info()[1])), MSG_MAX)
                     self.logger.log(LOG_ERROR, "Error running %s command in module %s\n%s\n%s\n%s\n%s\n" % (cmd, module, "".join(traceback.format_tb(sys.exc_info()[2])), sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
     
     ## Tries to load a given module name and handles any errors. If the module is already loaded, it uses 'reload' to reload the module.
@@ -111,8 +121,9 @@ class Bot(irc.IRCClient):
         self.logger.log(LOG_DEBUG, "Attempting to load '%s' on %s" % (moduleName, channel))
         try:
             if moduleName in sys.modules:
-                self.logger.log(LOG_DEBUG, "%s is in sys.modules - reloading" % moduleName)
-                module = reload(sys.modules[moduleName])
+                #self.logger.log(LOG_DEBUG, "%s is in sys.modules - reloading" % moduleName)
+                #module = reload(sys.modules[moduleName])
+                module = sys.modules[moduleName]
             else:
                 module = __import__(moduleName)
             module = module.Module()        #Get an object containing the 'Module' class of the given module
@@ -178,7 +189,7 @@ class Bot(irc.IRCClient):
     # @param channel The channel that the bot has joined.
     def joined(self, channel):
         self.joining = channel
-        self.channels[channel] = {'admins': [], 'users': []}
+        self.channels[channel] = {'modules': {}, 'admins': [], 'users': []}
         self.inchannel = True
         
         #Report startup errors
