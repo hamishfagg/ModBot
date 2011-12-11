@@ -128,6 +128,7 @@ class Bot(irc.IRCClient):
                 module = __import__(moduleName)
             module = module.Module()        #Get an object containing the 'Module' class of the given module
             module.main = self
+            module.channel = channel
 
             # Check dependancies
             if hasattr(module, 'depends'):
