@@ -51,14 +51,14 @@ class Bot(irc.IRCClient):
         if nargs[1][6].endswith('~') or nargs[1][6].endswith('&') or nargs[1][6].endswith('@'):
                 self.channels[self.joining]['admins'].append(nargs[1][5])
         self.channels[self.joining]['users'].append(nargs[1][5])
-        self.runHook("irc_rpl_whoreply", *nargs)
+        self.runHook("irc_rpl_whoreply", self.joining, *nargs)
 
     ## Called when WHO output is complete.
     # @param nargs A list of arguments including modes etc. See twisted documentation for details.
     def irc_RPL_ENDOFWHO(self, *nargs):
         self.logger.log(LOG_INFO, "Finished Joining %s.\n\t\t\t\tFound users: %s.\n\t\t\t\tFound admins: %s" % (self.joining, ", ".join(self.channels[self.joining]['users']), ", ".join(self.channels[self.joining]['admins'])))
-        self.runHook("joined", self.joining) #This is to stop the hook being run before user lists are populated
-        self.runHook("irc_rpl_endofwho", *nargs)
+        self.runHook("joined", self.joining, self.joining) #This is to stop the hook being run before user lists are populated
+        self.runHook("irc_rpl_endofwho", self.joining, *nargs)
 
         global channels
         channels.remove(self.joining)
@@ -68,28 +68,32 @@ class Bot(irc.IRCClient):
         else: del self.joining
 
     def topicUpdated(self, user, channel, newTopic):
-        self.runHook("topicupdated", user, channel, newTopic)
+        self.runHook("topicupdated", channel, user, channel, newTopic)
         
     ## Runs a given function in all loaded modules. Handles any resulting errors.
     # @param hook The name of the hook to be run. This is a name of a function in the irc.IRCClient class and also the name of the method from which this one will be called in this case.
     # @param args A list of the arguments to be passed to the hook function.
-    def runHook(self, hook, *args):
+    def runHook(self, hook, channels, *args):
         self.logger.log(LOG_DEBUG, "Running hook %s" % hook)
-        for module in self.modules:
-            functionName = self.modules[module]['hooks'].get(hook, None)
-            if functionName != None:
-                try:
-                    function = getattr(self.modules[module]['module'], functionName)
-                    function(*args)
-                except Exception,e:
-                    # Print the error to a channel if the hook came from a specific one
-                    for arg in args:
-                        try:
-                            if arg in self.channels:
-                                self.say(arg, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
-                        except:
-                            pass
-                    self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2])), str(sys.exc_info()[1])))
+        if channels == None: channels = self.channels.keys()
+        else: channels = [channels]
+        for channel in channels:
+            for module in self.channels[channel]['modules']:
+                functionName = self.channels[channel]['modules'][module]['hooks'].get(hook, None)
+                if functionName != None:
+                    try:
+                        function = getattr(self.channels[channel]['modules'][module]['module'], functionName)
+                        function(*args)
+                    except Exception,e:
+                        # Print the error to a channel if the hook came from a specific one
+                        # Todo: fix this channel arg was added
+                        for arg in args:
+                            try:
+                                if arg in self.channels:
+                                    self.say(arg, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
+                            except:
+                                pass
+                        self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2])), str(sys.exc_info()[1])))
 
     def runCmd(self, cmd, *args):
         user = args[0]
@@ -153,7 +157,7 @@ class Bot(irc.IRCClient):
                 self.msg(channel, "%sLoaded module \'%s\'." % (COLOUR_GREY, moduleName), MSG_MAX)
             if hasattr(module, 'loaded'):
                 module.loaded()
-            self.runHook("moduleloaded", moduleName)
+            self.runHook("moduleloaded", channel, moduleName)
 
         except:
             if self.channels[channel]['modules'].get(moduleName, None) != None: del self.channels[channel]['modules'][moduleName]
@@ -171,12 +175,12 @@ class Bot(irc.IRCClient):
     # @param channel The channel that the notice was sent to. Will be the bot's username if the notice was sent to the bot directly and not to a channel
     def noticed(self, user, channel, message):
         self.logger.log(LOG_DEBUG, "Notice: %s" % message)
-        self.runHook("noticed", user, channel, message)
+        self.runHook("noticed", None, user, channel, message)
 
     ## Called when the bot signs on to a server.
     def signedOn(self):
         self.connected = True
-        self.runHook("signedOn")
+        self.runHook("signedOn", None)
 
         global channels
         self.join(channels[0])
@@ -207,10 +211,10 @@ class Bot(irc.IRCClient):
     # @param channel The channel that the bot has left.
     def left(self, channel):
         del self.channels[channel]
-        self.runHook("left", channel)
+        self.runHook("left", None, channel)
     
     def kickedFrom(self, channel, kicker, message):
-        self.runHook("kickedfrom", channel, kicker, message)
+        self.runHook("kickedfrom", None, channel, kicker, message)
         del self.channels[channel]
 
     ## Called when a user leaves a channel that the bot is in.
@@ -223,7 +227,7 @@ class Bot(irc.IRCClient):
         if user in self.channels[channel]['admins']:
             self.channels[channel]['admins'].remove(user)
         self.channels[channel]['users'].remove(user)
-        self.runHook("userleft", user, channel)
+        self.runHook("userleft", channel, user, channel)
 
     ## Called when the bot sees a user disconnect.
     # @param user The user that has quit.
@@ -237,7 +241,7 @@ class Bot(irc.IRCClient):
                 self.channels[channel]['admins'].remove(user)
             if user in self.channels[channel]['users']:
                 self.channels[channel]['users'].remove(user)
-        self.runHook("userquit", user, quitMessage)
+        self.runHook("userquit", channel, user, quitMessage)
 
     ## Called when the bot sees a user join a channel that it is in.
     # @param user The user that has joined.
@@ -246,7 +250,7 @@ class Bot(irc.IRCClient):
         user = user.split('!', 1)[0]
         self.logger.log(LOG_INFO, "User '%s' has joined %s." % (user, channel))
         self.channels[channel]['users'].append(user)
-        self.runHook("userjoined", user, channel)
+        self.runHook("userjoined", channel, user, channel)
 
     ## Called when the bot recieves a message from a user or channel.
     # @param user The user that the message is from.
@@ -254,34 +258,35 @@ class Bot(irc.IRCClient):
     # @param message The message, derp.
     def privmsg(self, user, channel, message):
         user, self.host = user.split('!', 1)
+        words = message.split()
 
-        if channel == self.nickname: channel = user
-        self.runHook("privmsg", user, channel, message)
+        if channel == self.nickname:
+            channel = user
+            self.runHook("privmsg", None, user, channel, message)
+        else: self.runHook("privmsg", channel, user, channel, message)
 
         if channel == user: self.logger.log(LOG_DEBUG, "PM: <%s> %s" % (user, message))
         else: self.logger.log(LOG_DEBUG, '%s: <%s> %s' % (channel, user, message))
 
-        words = message.split()
         if words[0].startswith('!'):
             self.runCmd(words[0][1:], user, channel, words[1:])
-        if channel in self.channels:
-            if user in self.channels[channel]['admins']:
-                if words[0] == '!load': # someone wants to load a module
-                    for mod in words[1:]:
-                        self.loadModule(mod, channel)
-                if words[0] == '!unload':
-                    for mod in words[1:]:
-                        if self.channels[channel]['modules'].get(mod, None) == None:
-                            self.msg(channel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
-                        else:
-                            del self.channels[channel]['modules'][mod]
-                            del sys.modules[mod]
-                            self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
-                            self.runHook("moduleunloaded", mod)
+        if channel in self.channels and user in self.channels[channel]['admins']:
+            if words[0] == '!load': # someone wants to load a module
+                for mod in words[1:]:
+                    self.loadModule(mod, channel)
+            elif words[0] == '!unload':
+                for mod in words[1:]:
+                    if self.channels[channel]['modules'].get(mod, None) == None:
+                        self.msg(channel, "Module \'%s\' wasn\'t loaded." % mod, MSG_MAX)
+                    else:
+                        del self.channels[channel]['modules'][mod]
+                        del sys.modules[mod]
+                        self.msg(channel, "Module \'%s\' unloaded." % mod, MSG_MAX)
+                        self.runHook("moduleunloaded", channel, mod)
 
     def action(self, user, channel, data):
         if channel == self.nickname: channel = user
-        self.runHook("action", user, channel, data)
+        self.runHook("action", channel, user, channel, data)
     
     ## Called when users or channel's modes are changed.
     # @param user The user who instigated the change.
@@ -298,12 +303,13 @@ class Bot(irc.IRCClient):
             else:
                 for username in args:
                     self.channels[channel]['admins'].remove(username)
-        self.runHook("modechanged", user, channel, set, modes, args)
+        if channel == self.nickname: channel = None
+        self.runHook("modechanged", channel, user, channel, set, modes, args)
 
     # modbot changed its nick
     def nickChanged(self, nick):
         self.logger.log(LOG_INFO, "Nick changed to %s." % nick)
-        self.runHook("nickchanged", nick)
+        self.runHook("nickchanged", None, nick)
 
     # user changes his/her nick
     def userRenamed(self, oldnick, newnick):
@@ -311,7 +317,8 @@ class Bot(irc.IRCClient):
             if oldnick in chaninfo['users']:
                 chaninfo['users'].append(newnick)
                 chaninfo['users'].remove(oldnick)
-        self.runHook("userrenamed", oldnick, newnick)
+                self.runHook("userrenamed", channel, oldnick, newnick)
+                break
 
     ## A function to check the liveness of the socket. This is MEANT to be implemented in twisted.
     ## Without it, modbot seems to ping periodically =\
