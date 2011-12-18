@@ -1,18 +1,10 @@
+# todo: sync all channels
 from constants import *
 class Module():
     
     commands = {'away': 'away'}
     hooks = {'privmsg' : 'privmsg',
-             'userleft': 'userLeft'}
-    help = {
-        'desc': 'sets a person as away or present. PMs a user every line said in which they were mentioned once they are back.',
-        'away': {
-            'desc': 'Sets you as away. Using again sets you as present.',
-            'params': {
-                'reason': 'A reason for your impending inactivity.'
-            }
-        }
-    }
+             'userleft': 'userleft'}
 
     def __init__(self):
         self.reasons = {}
@@ -32,7 +24,8 @@ class Module():
             del self.reasons[user.lower()]
             self.main.say(channel, "%s%s is no longer away." % (COLOUR_DEFAULT, user), MSG_MAX)
 
-    def userLeft(self, user, channel):
+    def userleft(self, user, channel):
+        print 'userleft'
         if self.reasons.get(user.lower(), None) != None:
             del self.reasons[user.lower()]
 

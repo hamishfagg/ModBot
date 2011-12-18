@@ -10,5 +10,7 @@ class Module():
         elif level == 2: tag = 'WARNING'
         elif level == 3: tag = '   INFO'
         else: tag            = '  DEBUG'
+        if hasattr(self, 'channel'): chanPrefix = "%s: " % self.channel
+        else: chanPrefix = ""
 
-        print "%s %s: %s" % (timestamp, tag, message)
+        print "%s %s: %s%s" % (timestamp, tag, chanPrefix, message)
