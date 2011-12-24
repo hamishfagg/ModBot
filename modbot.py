@@ -130,7 +130,8 @@ class Bot(irc.IRCClient):
                 module = sys.modules[moduleName]
             else:
                 module = __import__(moduleName)
-            module = module.Module()        #Get an object containing the 'Module' class of the given module
+            try: module = module.Module(self, channel)        #Get an object containing the 'Module' class of the given module
+            except: module = module.Module()
             module.main = self
             module.channel = channel
 
