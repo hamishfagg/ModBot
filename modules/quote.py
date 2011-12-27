@@ -4,42 +4,23 @@ from constants import *
 class Module():
 
     depends = ['mysql', 'logger']
-    commands = {'q':        'quote',
-                'quote':    'quote',
-                'rq':       'randQuote',
+    commands = {'q': 'quote',
+                'quote': 'quote',
+                'rq': 'randQuote',
                 'randquote':'randQuote',
-                'nq':       'newQuote',
+                'nq': 'newQuote',
                 'newquote': 'newQuote'}
-    hooks =    {'loaded': 'loaded'}
+    hooks = {'loaded': 'loaded'}
 
-    help = {
-        'desc': 'searches, prints or adds new quotes. Tweets new quotes as they are added (if the Twitter module is loaded)',
-        'quote': {
-            'desc': 'Searches the quote database given a search term. If none is given, this command prints the latest quote.',
-            'params': {
-                'searchstring': 'String term to search for in the quote database (optional).'
-            }
-        },
-        'newquote': {
-            'desc': 'Adds a new quote to the database. Tweets the new quote given it is short enough and the Twitter module is loaded.',
-            'params': {
-                'quote': 'Quote to add to the database.'
-            }
-        },
-        'randquote': {
-            'desc': 'Prints a random quote.',
-            'params': {}
-        }
-    }
-
-    def __init__(self):
-        if 'twitter' in sys.modules:
+    def __init__(self, main, channel):
+        if 'twitter' in main.channels[channel]['modules']:
             self.depends.append('twitter')
     
     def loaded(self):
-        if 'twitter' not in sys.modules:
-            self.logger.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded.")
-        self.mysql.connect('quotes')
+        try: getattr(self, 'twitter')
+        except: self.logger.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded.")
+        self.tableName = 'quotes'
+        self.mysql.connect(self.tableName)
     
     def quote(self, user, channel, args):
         if len(args) == 0:
@@ -47,7 +28,7 @@ class Module():
             self.main.msg(channel, quote[0], 10000)
         else:
             string = "%" + " ".join(args) + "%"
-            quotes = self.mysql.execute("SELECT * FROM quotes WHERE UPPER(`quote`) LIKE UPPER(%s) LIMIT 6",  (string,))
+            quotes = self.mysql.execute("SELECT * FROM %s WHERE UPPER(`quote`) LIKE UPPER(%s) LIMIT 6",  (tablename, string,))
             for i in range(5):
                 if i == len(quotes):
                     break
@@ -61,7 +42,7 @@ class Module():
 
     def newQuote(self, user, channel, args):
         if user in self.main.channels[channel]['admins']:
-            self.mysql.insert(data={'user': user, 'quote': " ".join(args)})
+            self.mysql.insert(data={'user': user, 'quote': " ".join(args), 'channel':self.channel})
             self.main.msg(channel, "Quote was saved successfully", MSG_MAX)
             
             if 'twitter' in self.depends:
