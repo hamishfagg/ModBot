@@ -1,5 +1,20 @@
 -- Changelog --
 
+V2.5.0
+- Modules now have a separate instance for each channel that they are loaded in.
+    - Allows for different module lists on different channels.
+    - Makes writing modules easier.
+    - self.channel reference now given to modules - contains the name of the channel that it is loaded for.
+
+V2.2.0
+- Settings files added (with efaults) to make config easier.
+    - Users must copy <configfile>.default to <configfile> and change settings to suit.
+
+V2.1.0
+- Core and all modules updated to handle multiple channels.
+
+- Omegle module updated to be more fun.
+
 V2.0.0:
 - Added command, hook and dependancy registering.
 	- Modules define which other modules they depend on, and are not loaded unless all dependancies are met.
