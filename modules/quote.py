@@ -12,9 +12,9 @@ class Module():
                 'newquote': 'newQuote'}
     hooks = {'loaded': 'loaded'}
 
+
     def __init__(self, main, channel):
         if 'twitter' in main.channels[channel]['modules']:
-            self.depends.append('twitter')
     
     def loaded(self):
         try: getattr(self, 'twitter')
