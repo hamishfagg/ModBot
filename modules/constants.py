@@ -1,5 +1,5 @@
 ## HAX ##
-MSG_MAX = 1000
+MSG_MAX = 1024
 
 ## COLOURS ##
 COLOUR_WHITE        = chr(3) + '0'
