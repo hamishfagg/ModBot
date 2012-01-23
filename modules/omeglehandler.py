@@ -102,7 +102,9 @@ class Omegle:
     def msgResponse(self, data):
         if data == 'win': pass #print 'Message sent'
         else: print 'MESSAGE NOT SENT'
-    
+
+
+    # TODO: Remove this threading. Call events from a loop, wait for reply    
     def loop(self):
         def f():
             while self.id != None:
