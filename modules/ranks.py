@@ -1,3 +1,5 @@
+# Currently causes excess_flood DCs when joining large channels.
+# Need to find a fix
 from constants import *
 import time
 
