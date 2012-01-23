@@ -15,13 +15,19 @@ class Module():
 
     def __init__(self, main, channel):
         if 'twitter' in main.channels[channel]['modules']:
+            self.depends.append('twitter')
     
     def loaded(self):
         try: getattr(self, 'twitter')
         except: self.logger.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded.")
         self.tableName = 'quotes'
         self.mysql.connect(self.tableName)
-    
+
+    def moduleloaded(self, module):
+        if module == "twitter":
+            self.depends.append('twitter')
+            self.twitter = self.main.channels[self.channel]['modules']['twitter']['module']
+
     def quote(self, user, channel, args):
         if len(args) == 0:
             quote = self.mysql.find(fields=['quote'], order="created DESC", limit=1)[0]
