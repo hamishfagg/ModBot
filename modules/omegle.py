@@ -1,3 +1,4 @@
+### THIS IS CURRENTLY BROKEN ###
 import omeglehandler as Omegle
 import time
 from constants import *
