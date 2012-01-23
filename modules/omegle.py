@@ -183,14 +183,20 @@ class Module():
             if self.clients[channel]['mode'] == 'single' and self.clients[channel]['running']:
                 self.main.msg(channel, "Stranger disconnected", MSG_MAX)
                 del self.clients[channel]
+                self.ready = True
+                self.captcha = None
                 
             elif self.clients[channel]['mode'] == 'spy':
                 if self.clients[channel]['running']:
                     self.clients[channel]['running'] = False
                     self.main.msg(channel, "Stranger %s has disconnected." % str(index+1), MSG_MAX)
-                    if self.clients[channel]['clients'][index*(-1)+1].id != None: self.clients[channel]['clients'][index*(-1)+1].disconnect()
+                    if self.clients[channel]['clients'][index*(-1)+1].id != None:
+                        self.clients[channel]['clients'][index*(-1)+1].disconnect()
                     self.main.msg(channel, "You have disconnected.", MSG_MAX)
+                    time.sleep(1)
                     del self.clients[channel]
+                    self.ready = True
+                    self.captcha = None
 
             else:
                 if self.clients[channel]['running']:

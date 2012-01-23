@@ -19,10 +19,12 @@ class Omegle:
         self.ready = False
         self.index = index
 
+    def errBack(self, failure):
+        print "ERROR\n"+failure.getErrorMessage()
 
     def get(self, page, data='', callback='event'):
         #print "Getting %s" % page
-        getPage(url % page, method="POST", postdata=data, headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}).addCallback(getattr(self, callback))
+        getPage(url % page, method="POST", postdata=data, headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}).addCallbacks(getattr(self, callback), self.errBack)
 
     def getEvents(self):
         deff = reactor.callFromThread(getPage, url % "events", {'method': 'POST', 'postdata': 'id=%s' % self.id, 'headers': {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}})
