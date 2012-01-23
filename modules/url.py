@@ -36,7 +36,7 @@ class Module():
                                 if end == -1: end = len(arg)
                                 id = arg[vindex+2:end]
                                 self.printYoutubeDetails(channel, id)
-                    except: pass
+                    except: pass # Failing silently isn't much of a big deal here
 
     def printYoutubeDetails(self, channel, id):
         url = 'curl -L "http://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc&prettyprint=true"' % id
