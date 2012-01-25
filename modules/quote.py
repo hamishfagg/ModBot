@@ -21,7 +21,7 @@ class Module():
         try: getattr(self, 'twitter')
         except: self.logger.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded.")
         self.tableName = 'quotes'
-        self.mysql.connect(self.tableName)
+        self.mysql.connect()
 
     def moduleloaded(self, module):
         if module == "twitter":
@@ -30,7 +30,7 @@ class Module():
 
     def quote(self, user, channel, args):
         if len(args) == 0:
-            quote = self.mysql.find(fields=['quote'], order="created DESC", limit=1)[0]
+            quote = self.mysql.find(self.tableName, fields=['quote'], conditions={'channel': self.channel}, order="created DESC", limit=1)[0]
             self.main.msg(channel, quote[0], 10000)
         else:
             string = "%" + " ".join(args) + "%"
@@ -43,12 +43,12 @@ class Module():
                 self.main.msg(channel, "Exceeded maximum search results. Try a more specific search", MSG_MAX)
 
     def randQuote(self, user, channel, args):
-        quote = self.mysql.find(order="rand()", limit=1)
+        quote = self.mysql.find(self.tableName, order="rand()", limit=1)
         self.main.msg(channel, quote[0][2], MSG_MAX)
 
     def newQuote(self, user, channel, args):
         if user in self.main.channels[channel]['admins']:
-            self.mysql.insert(data={'user': user, 'quote': " ".join(args), 'channel':self.channel})
+            self.mysql.insert(self.tableName, data={'user': user, 'quote': " ".join(args), 'channel':self.channel})
             self.main.msg(channel, "Quote was saved successfully", MSG_MAX)
             
             if 'twitter' in self.depends:

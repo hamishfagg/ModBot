@@ -5,35 +5,31 @@ from constants import *
 class Module():
     depends = ['logger']
 
-    def connect(self, table):
-        self.table = table
+    def connect(self):
         self.db = mysql.connect(host=DBHOST, user=DBUSER, passwd=DBPASS, db=DBNAME)
         
         dbuser = None
         dbpass = None # Dunno if this helps
         self.cur = self.db.cursor()
 
-    def update(self, table=None, data={}, conditions={}):
+    def update(self, table, data={}, conditions={}):
         self.db.ping(1)
-        if table == None: table = self.table
 
         query = self.unpack(data, conditions)
         query[0] = 'UPDATE %s SET ' % table + query[0]
 
         self.cur.execute(query[0], query[1])
 
-    def iupdate(self, table=None, data={}, conditions={}):
+    def iupdate(self, table, data={}, conditions={}):
         self.db.ping(1)
-        if table == None: table = self.table
         
         if len(self.find(table=table, fields=['id'], conditions=conditions)) > 0:
             self.update(table=table, data=data, conditions=conditions)              # The row already exists
         else:
             self.insert(table=table, data=data)
 
-    def insert(self, table=None, data={}):
+    def insert(self, table, data={}):
         self.db.ping(1)
-        if table == None: table = self.table
 
         if data == {}:
             self.cur.execute("""INSERT %s (id) VALUES (DEFAULT)""" % table)
@@ -53,9 +49,8 @@ class Module():
             query += ')'
             self.cur.execute(query, datalist)
 
-    def find(self, table=None, fields=[], conditions={}, order=None, limit=None):
+    def find(self, table, fields=[], conditions={}, order=None, limit=None):
         self.db.ping(1)
-        if table == None: table = self.table
         if fields == []: fields = '*'
 
         query = self.unpack(conditions=conditions)
@@ -63,7 +58,6 @@ class Module():
 
         if order != None: query[0] += " ORDER BY %s" % order
         if limit  != None: query[0] += " LIMIT %s" % limit
-    
         self.cur.execute(query[0], query[1])
 
         return self.cur.fetchall()
