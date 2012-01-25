@@ -33,8 +33,9 @@ class Module():
             quote = self.mysql.find(self.tableName, fields=['quote'], conditions={'channel': self.channel}, order="created DESC", limit=1)[0]
             self.main.msg(channel, quote[0], 10000)
         else:
+            print self.channel
             string = "%" + " ".join(args) + "%"
-            quotes = self.mysql.execute("SELECT * FROM %s WHERE UPPER(`quote`) LIKE UPPER('%s') AND `channel`=%s LIMIT 6" % (self.tableName, self.channel, self.mysql.db.escape_string(string)))
+            quotes = self.mysql.execute("SELECT * FROM "+self.tableName+" WHERE UPPER(`quote`) LIKE UPPER(%s) AND `channel` = %s LIMIT 6", (string, self.channel))
             for i in range(5):
                 if i == len(quotes):
                     break
