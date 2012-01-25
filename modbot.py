@@ -24,6 +24,7 @@ class Bot(irc.IRCClient):
 
     ## Instance init.
     def __init__(self):
+        threading.Timer(60, self.minuteTimer).start()
         self.logger = logger.Module()
         
         self.channels = {}
@@ -37,7 +38,10 @@ class Bot(irc.IRCClient):
     
 
     """ ADMIN LIST HANDLING """
-    
+    def minuteTimer(self):
+        reactor.callFromThread(self.runHook, "minutetimer", None)    
+        threading.Timer(60, self.minuteTimer).start()
+
     ## List users in 'channel'. Used for gaining user modes on join.
     # @param channel The channel for which to list names.
     def who(self, channel):
@@ -83,14 +87,14 @@ class Bot(irc.IRCClient):
                     try:
                         function = getattr(self.channels[channel]['modules'][module]['module'], functionName)
                         function(*args)
-                    except Exception,e:
+                    except:
                         # Print the error to a channel if the hook came from a specific one
                         # Todo: fix this channel arg was added
                         for arg in args:
                             try:
                                 if arg in self.channels:
                                     self.say(arg, "Error running %s hook in module %s: %s" % (hook, module, str(sys.exc_info()[1])), MSG_MAX)
-                            except:
+                            except Exception,e:
                                 pass
                         self.logger.log(LOG_ERROR, "Error running %s hook in module %s\n%s\n%s\n" % (hook, module, "".join(traceback.format_tb(sys.exc_info()[2])), str(sys.exc_info()[1])))
 
