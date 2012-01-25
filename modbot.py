@@ -33,8 +33,7 @@ class Bot(irc.IRCClient):
         self.inchannel = False
         self.connected = False
         self.nickname = nick
-        for mod in startup:
-            self.loadModule(mod, None)
+        
     
 
     """ ADMIN LIST HANDLING """
@@ -196,6 +195,9 @@ class Bot(irc.IRCClient):
     def joined(self, channel):
         self.joining = channel
         self.channels[channel] = {'modules': {}, 'admins': [], 'users': []}
+        self.loadModule('logger', channel)
+        for mod in startup:
+            self.loadModule(mod, channel)
         self.inchannel = True
         
         #Report startup errors
