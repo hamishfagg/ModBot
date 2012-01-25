@@ -13,7 +13,8 @@ class Module():
                 'vote': 'vote'}
 
     def loaded(self):
-        self.mysql.connect('polls')
+        self.tableName = 'polls'
+        self.mysql.connect()
         self.updateCurrent()
     
     def updateCurrent(self):
@@ -30,7 +31,7 @@ class Module():
             self.main.say(self.channel, "Type '!vote yes' or '!vote no' to vote.", MSG_MAX)
 
     def closePoll(self, user, channel, args):
-        self.mysql.update(data={'closed': datetime.now()}, conditions={'id': self.current[0]})
+        self.mysql.update(self.tableName, data={'closed': datetime.now()}, conditions={'id': self.current[0]})
         if self.current != None:
             for chan in self.main.channels:
                 self.main.say(chan, "The poll has been closed!", MSG_MAX)
@@ -45,7 +46,7 @@ class Module():
         if user in self.main.channels[channel]['admins']:
             if len(poll) != 0:
                 if self.current != None: self.closePoll(None, None, None)
-                self.mysql.insert(data={'user': user, 'poll': poll, 'channel': self.channel})
+                self.mysql.insert(self.tableName, data={'user': user, 'poll': poll, 'channel': self.channel})
                 self.updateCurrent()
                 for channel in self.main.channels:
                     self.main.say(channel, "There is a new poll: %s" % self.current[2], MSG_MAX)
@@ -66,7 +67,7 @@ class Module():
                 num = self.current[4] + 1
                 vote = 0
 
-            self.mysql.update(data={votetype: num}, conditions={'id': self.current[0]})
+            self.mysql.update(self.tableName, data={votetype: num}, conditions={'id': self.current[0]})
             self.mysql.insert(table='votes', data={'poll_id': str(self.current[0]), 'user': user, 'host': self.main.host, 'vote': vote})
             self.updateCurrent()
             self.main.msg(channel, "Your vote has been cast.", MSG_MAX)
