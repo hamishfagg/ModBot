@@ -34,7 +34,7 @@ class Module():
             self.main.msg(channel, quote[0], 10000)
         else:
             string = "%" + " ".join(args) + "%"
-            quotes = self.mysql.execute("SELECT * FROM %s WHERE UPPER(`quote`) LIKE UPPER(%s) LIMIT 6",  (tablename, string,))
+            quotes = self.mysql.execute("SELECT * FROM %s WHERE UPPER(`quote`) LIKE UPPER(%s) LIMIT 6",  (self.tablename, string,))
             for i in range(5):
                 if i == len(quotes):
                     break
