@@ -138,9 +138,9 @@ class Bot(irc.IRCClient):
             # Check dependancies
             if hasattr(module, 'depends'):
                 for depend in module.depends:
-                    if depend in sys.modules:
+                    if depend in self.channels[channel]['modules']:
                         self.logger.log(LOG_DEBUG, " - Dependancy '%s' is loaded" % depend)
-                        setattr(module, depend, sys.modules[depend].Module())
+                        setattr(module, depend, self.channels[channel]['modules'][depend]['module'])
                     else:
                         self.logger.log(LOG_ERROR, "Failed to load %s: A dependancy (%s) is not loaded." % (moduleName, depend))
                         self.msg(channel, "Couldn't load module \'%s\': A dependancy (%s) is not loaded." % (moduleName, depend), MSG_MAX)
