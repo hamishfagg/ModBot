@@ -1,0 +1,5 @@
+## Add your database details here and rename to 'mysqlconf.py' ##
+DBHOST = 'localhost'
+DBUSER = 'DBUSER'
+DBPASS = 'DBPASS'
+DBNAME = 'DBNAME'
