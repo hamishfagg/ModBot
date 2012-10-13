@@ -9,6 +9,12 @@ network: irc.network.net
 # Port to use
 port: 6667
 
+# Channel to connect to at startup
+channel: #channelName
+
+# Nicks of people to administrate ModBot. Space delimited
+admins: MystX
+
 # Can be: LOG_DEBUG, LOG_INFO, LOG_WARNING or LOG_ERROR
 log_level: LOG_INFO
 
@@ -19,5 +25,5 @@ log_level: LOG_INFO
 # Use ssl to connect to the specified server
 use_ssl: no
 
-# Channels to connect to at startup. Space-delimited
-channels: 
+# Plugins to load when ModBot starts. Space delimited
+plugins: logger away url
