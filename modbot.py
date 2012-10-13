@@ -33,7 +33,7 @@ class Bot(irc.IRCClient):
         self.plugins = {}
         
     def minuteTimer(self):
-        reactor.callFromThread(self.runHook, "minutetimer", None)    
+        reactor.callFromThread(self.runHook, "minutetimer")    
         threading.Timer(60, self.minuteTimer).start()
 
     ## List users in 'channel'. Used for gaining user modes on join.
