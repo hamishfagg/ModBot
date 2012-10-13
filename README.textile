@@ -1,4 +1,4 @@
-ModBot V 2.0.1
+ModBot V 2.5
 
 ModBot is a modular IRC bot written in Python (2.7).
 It is built with ease of use in mind - whether that use be from the end user, someone writing a plugin, or someone editing existing parts of the bot.
@@ -8,8 +8,8 @@ The main class in modbot.py provides the most basic of functions (loading plugin
 To configure Modbot:
 
 1: Copy/move settings.conf.default to settings.conf and configure to your liking.
-2: Go to the modules folder and do the same for any module configs that you wish to use.
-3: Edit startup.py to contain all of the modules you want to be loaded on startup.
+2: Go to the plugins folder and do the same for any plugin configs that you wish to use.
+3: Edit settings.conf to contain all of the modules you want to be loaded on startup.
 
 Then you are able to run Modbot:
 <pre><code>
@@ -21,4 +21,4 @@ Modbot will then ask for a NickServ password to identify with.
 
 (Documentation on writing plugins is to come)
 
-(Documentation on everyhting is to come)
+(Documentation on everything is to come)
