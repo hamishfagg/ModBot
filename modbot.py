@@ -20,7 +20,6 @@ class Bot(irc.IRCClient):
 
     ## Instance init.
     def __init__(self):
-        threading.Timer(60, self.minuteTimer).start()
         self.logger = logger.Plugin()
         self.startupErr = {}
 
@@ -33,9 +32,10 @@ class Bot(irc.IRCClient):
         self.plugins = {}
         
     def minuteTimer(self):
-        reactor.callFromThread(self.runHook, "minutetimer")    
-        threading.Timer(60, self.minuteTimer).start()
-
+        while self.inchan:
+            reactor.callFromThread(self.runHook, "minutetimer")
+            time.sleep(60)
+               
     ## List users in 'channel'. Used for gaining user modes on join.
     # @param channel The channel for which to list names.
     #def who(self, channel):
@@ -187,6 +187,12 @@ class Bot(irc.IRCClient):
             self.msg(self.channel, "Errors occured loading plugins on startup:")
             for pluginName in self.startupErr:
                 self.msg(self.channel, "Couldn't load plugin \'%s\': %s" % (pluginName, self.startupErr[pluginName]))
+
+        # Start the minute timer
+        self.logger.log(LOG_DEBUG, "Starting timer thread")
+        timer = threading.Thread(target=self.minuteTimer)
+        timer.setDaemon(True)
+        timer.start()
                 
 
     ## Called when the bot leaves a channel
@@ -295,7 +301,7 @@ class Bot(irc.IRCClient):
         
         def start_thread():
             thread = threading.Thread(target=f)
-            thread.daemon = True
+            thread.setDaemon(True)
             thread.start()
         
         start_thread()

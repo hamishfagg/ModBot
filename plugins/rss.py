@@ -19,12 +19,11 @@ class Plugin():
             if self.p.entries[0].date != self.current[feed]:
                 #Make a list of all the new entries
                 new = []
-                print "new stuff"
                 for entry in self.p.entries:
                     if entry.date == self.current[feed]: break
-                    print "new"
                     new += ["%s: %s - %s" % (feed, entry.title.encode('ascii'), entry.link.encode('ascii'))]
                 new.reverse()
-                for post in new:
-                    if say: self.main.msg(self.main.channel, post)
+                if say:
+                    for post in new:
+                        self.main.msg(self.main.channel, post)
                 self.current[feed] = self.p.entries[0].date

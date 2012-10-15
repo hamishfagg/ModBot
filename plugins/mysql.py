@@ -2,7 +2,7 @@ import MySQLdb as mysql
 from mysqlconf import *
 from constants import *
 
-class Module():
+class Plugin():
     depends = ['logger']
 
     def connect(self):
