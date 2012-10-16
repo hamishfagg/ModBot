@@ -177,7 +177,7 @@ class Bot(irc.IRCClient):
         self.logger.log(LOG_INFO, "Joined %s" % channel)
         self.channel = channel
         if self.settings['Misc'].get('plugins', None) != None:
-            for plugin in self.settings['Misc']['plugins']:
+            for plugin in self.settings['Misc']['plugins'].split():
                 self.loadPlugin(plugin)
 
         self.inchan = True
