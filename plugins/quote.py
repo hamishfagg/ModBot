@@ -1,7 +1,7 @@
 import sys
 from constants import *
 
-class Module():
+class Plugin():
 
     depends = ['mysql', 'logger']
     commands = {'q': 'quote',
@@ -13,44 +13,40 @@ class Module():
     hooks = {'loaded': 'loaded'}
 
 
-    def __init__(self, main, channel):
-        if 'twitter' in main.channels[channel].modules:
-            self.depends.append('twitter')
-    
     def loaded(self):
-        try: getattr(self, 'twitter')
-        except: self.logger.log(LOG_INFO, "Twitter module is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter module is loaded and the Quote module is reloaded.")
+        if 'twitter' in self.main.plugins:
+            self.twitter = self.main.plugins['twitter']
+        else:
+            self.logger.log(LOG_INFO, "Twitter plugin is not loaded.\n\t\t\t\tQuotes will not be tweeted unless the Twitter plugin is loaded.")
         self.tableName = 'quotes'
         self.mysql.connect()
 
     def moduleloaded(self, module):
         if module == "twitter":
-            self.depends.append('twitter')
-            self.twitter = self.main.channels[self.channel]['modules']['twitter']['module']
+            self.twitter = self.main.plugins['twitter']
 
-    def quote(self, user, channel, args, PM):
+    def quote(self, user, args):
         if len(args) == 0:
-            quote = self.mysql.find(self.tableName, fields=['quote'], conditions={'channel': self.channel}, order="created DESC", limit=1)[0]
-            self.main.msg(channel, quote[0], 10000)
+            quote = self.mysql.find(self.tableName, fields=['quote'], conditions={'channel': self.main.channel}, order="created DESC", limit=1)[0]
+            self.main.msg(self.main.channel, quote[0])
         else:
-            print self.channel
             string = "%" + " ".join(args) + "%"
-            quotes = self.mysql.execute("SELECT * FROM "+self.tableName+" WHERE UPPER(`quote`) LIKE UPPER(%s) AND `channel` = %s LIMIT 6", (string, self.channel))
+            quotes = self.mysql.execute("SELECT * FROM "+self.tableName+" WHERE UPPER(`quote`) LIKE UPPER(%s) AND `channel` = %s LIMIT 6", (string, self.main.channel))
             for i in range(5):
                 if i == len(quotes):
                     break
-                self.main.msg(channel, quotes[i][2], MSG_MAX)
+                self.main.msg(self.main.channel, quotes[i][2])
             if len(quotes) > 5:
-                self.main.msg(channel, "Exceeded maximum search results. Try a more specific search", MSG_MAX)
+                self.main.msg(self.main.channel, "Exceeded maximum search results. Try a more specific search")
 
-    def randQuote(self, user, channel, args, PM):
+    def randQuote(self, user, args):
         quote = self.mysql.find(self.tableName, order="rand()", limit=1)
-        self.main.msg(channel, quote[0][2], MSG_MAX)
+        self.main.msg(self.main.channel, quote[0][2])
 
-    def newQuote(self, user, channel, args, PM):
-        if user in self.main.channels[channel]['admins']:
-            self.mysql.insert(self.tableName, data={'user': user, 'quote': " ".join(args), 'channel':self.channel})
-            self.main.msg(channel, "Quote was saved successfully", MSG_MAX)
+    def newQuote(self, user, args):
+        if user in self.main.admins:
+            self.mysql.insert(self.tableName, data={'user': user, 'quote': " ".join(args), 'channel':self.main.channel})
+            self.main.msg(self.main.channel, "Quote was saved successfully")
             
-            if 'twitter' in self.depends:
+            if hasattr(self, 'twitter'):
                 self.twitter.tweetQuote(" ".join(args))
