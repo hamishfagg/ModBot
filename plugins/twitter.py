@@ -1,29 +1,29 @@
 from constants import *
 import twitterhandler
 
-class Module():
+class Plugin():
 
     depends = ['logger']
     commands = {'tweet': 'tweet'}
 
-    def tweet(self, user, channel, args):
+    def tweet(self, user, args):
         tweet = " ".join(args)
-        if user in self.main.channels[channel]['admins']:
+        if user in self.main.admins:
             if len(tweet) > 140:
-                self.main.say(channel, "Tweet too long, please shorten it by %s characters." % (len(tweet) - 140), MSG_MAX)
+                self.main.say(self.main.channel, "Tweet too long, please shorten it by %s characters." % (len(tweet) - 140))
             else:
                 ret = twitterhandler.tweet(tweet)
                 if ret == 1:
-                    self.main.say(channel, "Sent tweet.", MSG_MAX)
+                    self.main.msg(self.main.channel, "Sent tweet.")
                 else:
-                    self.main.say(channel, ret, MSG_MAX)
+                    self.main.msg(self.main.channel, ret)
                     self.logger.log(LOG_ERROR, ret)
             
     def tweetQuote(self, quote):
         if len(quote) > 140:
-            self.main.say(self.main.channel, "Couldn't tweet that quote - it's too long. You need to shorten it by %s characters." % (len(quote) - 140), MSG_MAX)
+            self.main.msg(self.main.channel, "Couldn't tweet that quote - it's too long. You need to shorten it by %s characters." % (len(quote) - 140))
         else:
             ret = twitterhandler.tweet(quote)
             if ret != 1:
-                self.main.say(self.channel, ret, MSG_MAX)
+                self.main.msg(self.main.channel, ret)
                 self.logger.log(LOG_ERROR, ret)
