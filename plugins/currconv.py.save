@@ -1,9 +1,0 @@
-from constants import *
-import subprocess
-
-class Module():
-
-    commands = {'currency': 'convert'}
-
-    def convert(self, user, channel, args):
-        if len(args) == 3: value, cFrom, cTo 
