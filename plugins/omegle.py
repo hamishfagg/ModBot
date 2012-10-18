@@ -55,7 +55,6 @@ class Plugin():
         self.mode = None
         for client in self.clients: client.disconnect()
         self.main.msg(self.main.channel, "You have disconnected.")
-        time.sleep(1)
         del self.clients
         self.clients = []
         self.captcha = None
@@ -197,26 +196,18 @@ class Plugin():
             self.main.msg(self.main.channel, 'Recaptcha accepted!')
         else: self.main.msg(self.main.channel, 'Recaptcha rejected!')
 
+    def on_commonLikes(self, index, likes):
+        self.main.msg(self.main.channel, "Stranger %s likes: %s" % (str(index+1), ", ".join(likes)))
+
     def on_disconnected(self, index, reason):
 
         if self.mode == 'single':
             self.main.msg(self.main.channel, "Stranger disconnected")
-            self.clients = []
-            self.connecting = False
-            self.captcha = None
-            self.mode = None
+            self.cmdDisconnect(None, None)
              
         elif self.mode == 'spy':
             self.main.msg(self.main.channel, "Stranger %s has disconnected." % str(index+1))
-            if self.clients[index*(-1)+1].id != None:
-                self.clients[index*(-1)+1].disconnect()
-            self.main.msg(self.main.channel, "You have disconnected.")
-            time.sleep(1)
-            del self.clients
-            self.clients = []
-            self.connecting = False
-            self.captcha = None
-            self.mode = None
+            self.cmdDisconnect(None, None)
 
         elif self.mode == 'party':
             self.main.msg(self.main.channel, "Stranger %s has disconnected." % str(index+1))

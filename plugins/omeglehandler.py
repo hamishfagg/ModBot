@@ -77,10 +77,10 @@ class Omegle:
                     self.mod.on_recaptchaResponse(self.index, False)
                     getPage("http://www.google.com/recaptcha/api/challenge?k=" + str(event[1])).addCallback(self.recaptcha)
 
+                elif event[0] == 'commonLikes':
+                    self.mod.on_commonLikes(self.index, event[1])
 
-        #elif data == 'win' and self.challenge != None:
-        #   self.mod.on_recaptchaResponse(self.channel, self.index, True)
-        #   self.challenge = None
+                else: print event[0]
 
         self.ready = True
 
@@ -104,9 +104,10 @@ class Omegle:
         self.get('recaptcha', urlencode({'id': self.id, 'challenge': self.challenge, 'response': response}))
     
     def disconnect(self):
-        self.get('disconnect', 'id=%s' % self.id, 'passFunc')
-        self.id = None
-        self.mod.on_disconnected(self.index, 'user')
+        if self.id != None:
+            self.get('disconnect', 'id=%s' % self.id, 'passFunc')
+            self.id = None
+            self.mod.on_disconnected(self.index, 'user')
 
     def msgResponse(self, data):
         if data == 'win': pass #print 'Message sent'
