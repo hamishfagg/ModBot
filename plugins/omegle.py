@@ -22,6 +22,9 @@ class Plugin():
     connecting = False
     num = 0
 
+    GREETING_SINGLE = "Surprise, you're not talking to one stranger. You're actually talking to an IRC (Internet Relay Chat) channel!"
+    GREETING_PARTY = "Surprise! You're not talking to just one stranger, you're actually talking to %s!\nDifferent strangers are prefixed with a number so that you can tell them apart.\n- You are stranger number %s -"
+
     def cmdOmegle(self, user, args):
         if self.clients == []: # There's no session going on in this channel yet
             if len(args) == 0:
@@ -134,14 +137,14 @@ class Plugin():
         #time.sleep(5)
         if self.mode == 'single':
             self.logger.log(LOG_INFO, "OMEGLE: * Connected to a stranger *")
-            self.clients[0].sendMsg("Surprise, you're not talking to one stranger. You're actually talking to an IRC (Internet Relay Chat) channel!")
-            self.main.msg(self.main.channel, "Connected to a stranger. Say hi!")
+            self.clients[0].sendMsg()
+            self.main.msg(self.main.channel, "** Connected to a stranger. Say hi! **")
         
         elif self.mode != None:
             self.logger.log(LOG_INFO, "OMEGLE: * Stranger %s connected *" % str(index+1))
-            self.main.msg(self.main.channel, "Stranger %s connected." % str(index+1))
+            self.main.msg(self.main.channel, "** Stranger %s connected **" % str(index+1))
             if self.mode == 'party':
-                self.clients[index].sendMsg("Surprise! You're not talking to just one stranger, you're actually talking to %s!\nDifferent strangers are prefixed with a number so that you can tell them apart.\n- You are stranger number %s -" % (self.num, str(index+1)))
+                self.clients[index].sendMsg(GREETING_PARTY % (self.num, str(index+1)))
                 
                 self.sendToAll(index, "** Stranger %s has connected **" % str(index+1))
 
@@ -172,8 +175,11 @@ class Plugin():
                 newindex = index*(-1) + 1
                 self.clients[newindex].sendMsg(message)
             else:
-                self.logger.log(LOG_DEBUG, "OMEGLE: %s: %s" % (str(index+1), message))
-                self.sendToAll(index, "%s: %s" % (str(index+1), message))
+                if message == GREETING_PARTY % (self.num, str(index+1)): # Kick a client if it's modbot
+                    self.cmdKick(None, index+1)
+                else:
+                    self.logger.log(LOG_DEBUG, "OMEGLE: %s: %s" % (str(index+1), message))
+                    self.sendToAll(index, "%s: %s" % (str(index+1), message))
             self.main.msg(self.main.channel, "Stranger %s: %s" % (str(index+1), message.encode('ascii', 'replace')))
     
     def on_typing(self, index):
@@ -202,15 +208,15 @@ class Plugin():
     def on_disconnected(self, index, reason):
 
         if self.mode == 'single':
-            self.main.msg(self.main.channel, "Stranger disconnected")
+            self.main.msg(self.main.channel, "** Stranger disconnected **")
             self.cmdDisconnect(None, None)
              
         elif self.mode == 'spy':
-            self.main.msg(self.main.channel, "Stranger %s has disconnected." % str(index+1))
+            self.main.msg(self.main.channel, "** Stranger %s has disconnected **" % str(index+1))
             self.cmdDisconnect(None, None)
 
         elif self.mode == 'party':
-            self.main.msg(self.main.channel, "Stranger %s has disconnected." % str(index+1))
+            self.main.msg(self.main.channel, "** Stranger %s has disconnected **" % str(index+1))
             if self.captcha == None:
                 self.sendToAll(index, "** Stranger %s has disconnected. Finding a new Stranger... **" % str(index+1))
                 self.connectNext()
