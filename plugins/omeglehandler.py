@@ -31,12 +31,14 @@ class Omegle:
 
     def connect(self, data=None):
         topics = self.mod.getTopics(self.index)
-        topicData = "%5B"
-        for i in range(len(topics)):
-            if i != 0:
-                topicData += "%2C"
-            topicData += "%%22%s%%22" % topics[i]
-        topicData += "%5D"
+        topicData = ""
+        if len(topics) != 0:
+            topicData = "%5B"
+            for i in range(len(topics)):
+                if i != 0:
+                    topicData += "%2C"
+                topicData += "%%22%s%%22" % topics[i]
+            topicData += "%5D"
 
         if data == None:
             self.get('start/?rcs=1&spid=&topics=%s' % topicData, '', 'connect')
