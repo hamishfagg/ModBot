@@ -33,7 +33,7 @@ class Omegle:
         topics = self.mod.getTopics(self.index)
         topicData = ""
         if len(topics) != 0:
-            topicData = "%5B"
+            topicData = "&topics=%5B"
             for i in range(len(topics)):
                 if i != 0:
                     topicData += "%2C"
@@ -41,7 +41,7 @@ class Omegle:
             topicData += "%5D"
 
         if data == None:
-            self.get('start/?rcs=1&spid=&topics=%s' % topicData, '', 'connect')
+            self.get('start/?rcs=1&spid=%s' % topicData, '', 'connect')
         
         elif data[0] == '"' and data[-1] == '"':
             self.id = data[1:-1]
