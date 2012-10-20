@@ -1,6 +1,24 @@
 import omeglehandler as Omegle
-import time
+from time import sleep
 from constants import *
+
+
+
+### CONSTANTS FOR EACH OPERATING MODE ###
+
+# 0- Single (client talked to IRC chan)
+# 1- Spy (watch a normal omegle conversation - they have no idea you're watching)
+# 2- Party! (connect 2-9000 clients together, each is given a number so they can tell eachother apart)
+
+MODENAMES = ["single", "spy", "party"]
+GREETINGS = [
+    "Surprise, you're not talking to one stranger. You're actually talking to an IRC (Internet Relay Chat) channel!%s%s",
+    "%s%s",
+    "Surprise! You're not talking to just one stranger, you're actually talking to %s!\nDifferent strangers are prefixed with a number so that you can tell them apart.\n*** You are stranger number %s ***"
+]
+NUM_CLIENTS = [1, 2, 4] # 4 is the default for party.
+DEFAULT_PARTY_NUM = 4
+
 
 class Plugin():
     depends = ['logger']
@@ -15,54 +33,40 @@ class Plugin():
                 'deltopics': 'cmdDelTopics'
                 }
 
-    clients = []
+    clients = {}
     topics = {}
     mode = None
     captcha = None
-    connecting = False
-    num = 0
+    num = 4
 
-    GREETING_SINGLE = "Surprise, you're not talking to one stranger. You're actually talking to an IRC (Internet Relay Chat) channel!"
-    GREETING_PARTY = "Surprise! You're not talking to just one stranger, you're actually talking to %s!\nDifferent strangers are prefixed with a number so that you can tell them apart.\n- You are stranger number %s -"
-
+    
     def cmdOmegle(self, user, args):
-        if self.clients == []: # There's no session going on in this channel yet
+        if self.clients == {}: # There's no session going on in this channel yet
             if len(args) == 0:
-                self.mode = 'single'
-                self.logger.log(LOG_DEBUG, "Starting Omegle in single mode.")
-                self.clients = [Omegle.Omegle(self, 0)]
+                self.mode = 0
+            elif args[0] in MODENAMES:
+                self.mode = MODENAMES.index(args[0])
+                self.logger.log(LOG_DEBUG, "Starting Omegle in %s mode." % MODENAMES[self.mode])
+            else: self.main.msg(self.main.channel, "Invalid Omegle mode. Modes are: %s" % ", ".join(MODENAMES))
 
-            elif args[0] == 'spy':
-                self.mode = 'spy'
-                self.logger.log(LOG_DEBUG, "Starting Omegle in spy mode.")
-                self.clients = [Omegle.Omegle(self, 0), Omegle.Omegle(self, 1)]
+            self.connecting = True
+            self.clients[0] = Omegle.Omegle(self, 0)
+            self.clients[0].connect()
 
-            elif args[0] == 'party':
-                self.mode = 'party'
-                if len(args) > 1:
-                    self.num = int(args[1])
-                else: self.num = 4
-                self.logger.log(LOG_DEBUG, "Starting Omegle in party mode.")
-                
-                for i in range(0, self.num):
-                    self.clients.append(Omegle.Omegle(self, i))
-            if self.captcha == None:
-                if not self.connecting:
-                    self.connecting = True
-                    self.clients[0].connect()
-            else:
-                self.main.msg(self.main.channel, "Waiting on captcha before connecting: %s" % self.captcha[2])
-        
 
     def cmdDisconnect(self, user, args): # It's easier to not wait for replies
         self.mode = None
-        for client in self.clients: client.disconnect()
-        self.main.msg(self.main.channel, "You have disconnected.")
-        del self.clients
-        self.clients = []
+        NUM_CLIENTS[2] = DEFAULT_PARTY_NUM
+        
+        if self.clients != {}:
+            for client in self.clients: self.clients[client].disconnect()
+            self.main.msg(self.main.channel, "You have disconnected.")
+            sleep(0.5)
+            self.clients = {}
         self.captcha = None
         self.connecting = False
-            
+        self.logger.log(LOG_DEBUG, "Omegle stopped.")
+        
 
     def cmdKick(self, user, args):
         try:
@@ -73,19 +77,17 @@ class Plugin():
                 message = "** Stranger %s is being kicked **" % str(index)
             self.sendToAll(index-1, message)
             self.clients[index-1].disconnect()
+            sleep(0.5)
+            del self.clients[index-1]
         except: pass
     
     def cmdInject(self, user, args):
-        if self.mode != 'single' and len(args) > 0:
+        if self.mode != 0 and len(args) > 0:
             try:
                 index = int(args[0])
-            except:
-                index = 0
-
-            if index == 0: # Inject to all clients
-                self.sendToAll(None, " ".join(args))
-            else:
                 self.clients[index-1].sendMsg(" ".join(args[1:]))
+            except:
+                self.sendToAll(None, " ".join(args))
     
     def cmdCap(self, user, args):
         if len(args) > 0:
@@ -121,74 +123,77 @@ class Plugin():
 
 
     def privmsg(self, user, channel, message):
-        if self.mode == 'single':
+        if self.mode == 0:
             self.clients[0].sendMsg("<%s> %s" % (user.split('!', 1)[0], message))
 
     def action(self, user, data):
         if self.mode == 'single':
-            self.clients[channel]['clients'][0].sendMsg("* %s %s" % (user, data))   
+            self.clients[0].sendMsg("* %s %s" % (user, data))   
 
     def sendToAll(self, exclude, message):
         for client in self.clients:
-            if client.index != exclude and client.index != None:
-                client.sendMsg(message)
+            if self.clients[client].index != None and self.clients[client].index != exclude:
+                self.clients[client].sendMsg(message)
 
     def on_connected(self, index):
-        #time.sleep(5)
-        if self.mode == 'single':
+        if self.mode == 0:
             self.logger.log(LOG_INFO, "OMEGLE: * Connected to a stranger *")
-            self.clients[0].sendMsg()
             self.main.msg(self.main.channel, "** Connected to a stranger. Say hi! **")
+            args = ["", ""]
+
         
-        elif self.mode != None:
+        else:
             self.logger.log(LOG_INFO, "OMEGLE: * Stranger %s connected *" % str(index+1))
             self.main.msg(self.main.channel, "** Stranger %s connected **" % str(index+1))
-            if self.mode == 'party':
-                self.clients[index].sendMsg(GREETING_PARTY % (self.num, str(index+1)))
-                
+            if self.mode == 2:
                 self.sendToAll(index, "** Stranger %s has connected **" % str(index+1))
+                args = [NUM_CLIENTS[self.mode], str(index+1)]
+            else: args = ["", ""]
+
+            self.clients[index].sendMsg(GREETINGS[self.mode] % (args[0], args[1]))
 
             #connect the next client for this channel
             if self.connectNext(): return
 
-        # code reaches here if there are no more unconnected clients
+        
+        # code reaches here if there are no more unconnected clients or we're in single mode
         self.logger.log(LOG_DEBUG, "OMEGLE: All clients connected.")
         self.connecting = False
 
     def connectNext(self,):
         if self.captcha == None:
-            for client in self.clients:
-                if client.id == None:
-                    client.connect()
+            for i in range(NUM_CLIENTS[self.mode]):
+                if self.clients.get(i, None) == None:
+                    self.clients[i] = Omegle.Omegle(self, i)
+                    self.clients[i].connect()
                     return True
             return False
         else: return True # this makes on_connected() exit, and stop bothering us.
     
     def on_message(self, index, message):
-        if self.mode == 'single':
+        if self.mode == 0:
             message = "Stranger: " + message
             self.logger.log(LOG_INFO, message)
-            self.main.msg(self.main.channel, message.encode('ascii', 'replace'))
+        else:
+            message = "Stranger %s: %s" % (str(index+1), message)
 
-        elif self.mode != None:
-            if self.mode == 'spy':
+            if self.mode == 1:
                 newindex = index*(-1) + 1
                 self.clients[newindex].sendMsg(message)
             else:
-                if message == GREETING_PARTY % (self.num, str(index+1)): # Kick a client if it's modbot
-                    self.cmdKick(None, index+1)
-                else:
-                    self.logger.log(LOG_DEBUG, "OMEGLE: %s: %s" % (str(index+1), message))
-                    self.sendToAll(index, "%s: %s" % (str(index+1), message))
-            self.main.msg(self.main.channel, "Stranger %s: %s" % (str(index+1), message.encode('ascii', 'replace')))
+                self.sendToAll(index, "%s: %s" % (str(index+1), message))
+
+        self.main.msg(self.main.channel, message.encode('ascii', 'replace'))
+        self.logger.log(LOG_DEBUG, "OMEGLE: %s" % (message))
+
     
     def on_typing(self, index):
-        if self.mode == 'spy':
+        if self.mode == 1:
             newindex = index*(-1) + 1
             self.clients[newindex].sendTyping()
     
     def on_stoppedTyping(self, index):
-        if self.mode == 'spy':
+        if self.mode == 1:
             newindex = index*(-1) + 1
             self.clients[newindex].sendStoppedTyping()
 
@@ -206,22 +211,25 @@ class Plugin():
         self.main.msg(self.main.channel, "Stranger %s likes: %s" % (str(index+1), ", ".join(likes)))
 
     def on_disconnected(self, index, reason):
-
-        if self.mode == 'single':
-            self.main.msg(self.main.channel, "** Stranger disconnected **")
-            self.cmdDisconnect(None, None)
+        del self.clients[index]
+        dc = False
+        if self.mode == 0:
+            message = "** Stranger disconnected **"
+            dc = True
              
-        elif self.mode == 'spy':
-            self.main.msg(self.main.channel, "** Stranger %s has disconnected **" % str(index+1))
-            self.cmdDisconnect(None, None)
+        else:
+            message = "** Stranger %s has disconnected **" % str(index+1)
 
-        elif self.mode == 'party':
-            self.main.msg(self.main.channel, "** Stranger %s has disconnected **" % str(index+1))
-            if self.captcha == None:
+            if self.mode == 1:
+                dc = True
+
+            elif self.captcha == None:
                 self.sendToAll(index, "** Stranger %s has disconnected. Finding a new Stranger... **" % str(index+1))
                 self.connectNext()
             else:
                 self.sendToAll(index, "** Stranger %s has disconnected. Waiting for an operator to solve captcha before connecting another stranger.. **" % str(index+1))
+        self.main.msg(self.main.channel, message)
+        if dc: self.cmdDisconnect(None, None)
                 
     def getTopics(self, index):
         return self.topics.get(index, [])

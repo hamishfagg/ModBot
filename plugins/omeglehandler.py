@@ -107,7 +107,7 @@ class Omegle:
         if self.id != None:
             self.get('disconnect', 'id=%s' % self.id, 'passFunc')
             self.id = None
-            self.mod.on_disconnected(self.index, 'user')
+            #self.mod.on_disconnected(self.index, 'user')
 
     def msgResponse(self, data):
         if data == 'win': pass #print 'Message sent'
