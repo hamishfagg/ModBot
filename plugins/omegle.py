@@ -49,7 +49,6 @@ class Plugin():
                 self.logger.log(LOG_DEBUG, "Starting Omegle in %s mode." % MODENAMES[self.mode])
             else: self.main.msg(self.main.channel, "Invalid Omegle mode. Modes are: %s" % ", ".join(MODENAMES))
 
-            self.connecting = True
             self.clients[0] = Omegle.Omegle(self, 0)
             self.clients[0].connect()
 
@@ -64,22 +63,23 @@ class Plugin():
             sleep(0.5)
             self.clients = {}
         self.captcha = None
-        self.connecting = False
         self.logger.log(LOG_DEBUG, "Omegle stopped.")
         
 
     def cmdKick(self, user, args):
-        try:
-            index = int(args[0]) #returns if an index is not specified
-            if len(args) > 1:
-                message = "** Stranger %s is being kicked. (Reason: %s) **" % (index, " ".join(args[1:]))
-            else:
-                message = "** Stranger %s is being kicked **" % str(index)
-            self.sendToAll(index-1, message)
-            self.clients[index-1].disconnect()
-            sleep(0.5)
-            del self.clients[index-1]
-        except: pass
+        if self.mode == 2:
+            try:
+                index = int(args[0]) #returns if an index is not specified
+                if len(args) > 1:
+                    message = "** Stranger %s is being kicked. (Reason: %s) **" % (index, " ".join(args[1:]))
+                else:
+                    message = "** Stranger %s is being kicked **" % str(index)
+                self.sendToAll(index-1, message)
+                self.clients[index-1].disconnect()
+                sleep(0.5)
+                del self.clients[index-1]
+                self.connectNext()
+            except: pass
     
     def cmdInject(self, user, args):
         if self.mode != 0 and len(args) > 0:
@@ -152,13 +152,9 @@ class Plugin():
 
             self.clients[index].sendMsg(GREETINGS[self.mode] % (args[0], args[1]))
 
-            #connect the next client for this channel
-            if self.connectNext(): return
+            self.connectNext()
 
         
-        # code reaches here if there are no more unconnected clients or we're in single mode
-        self.logger.log(LOG_DEBUG, "OMEGLE: All clients connected.")
-        self.connecting = False
 
     def connectNext(self,):
         if self.captcha == None:
@@ -166,9 +162,9 @@ class Plugin():
                 if self.clients.get(i, None) == None:
                     self.clients[i] = Omegle.Omegle(self, i)
                     self.clients[i].connect()
-                    return True
-            return False
-        else: return True # this makes on_connected() exit, and stop bothering us.
+                    return
+            self.logger.log(LOG_DEBUG, "OMEGLE: All clients connected.")
+
     
     def on_message(self, index, message):
         if self.mode == 0:
