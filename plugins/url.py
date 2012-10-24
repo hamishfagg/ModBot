@@ -45,7 +45,7 @@ class Plugin():
         output, err = subprocess.Popen(url, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         if output.startswith("{"): #It was probably a valid video id
             details = simplejson.loads(output)
-            rating = "%sRating:%s%s %s%s /%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_GREEN, details['data']['likeCount'], COLOUR_DEFAULT, COLOUR_RED, details['data']['ratingCount']-int(details['data']['likeCount']), COLOUR_DEFAULT)
+            rating = "%sRating:%s%s %s%s /%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_BLACK+",9", details['data']['likeCount'], COLOUR_DEFAULT, COLOUR_BLACK+",4", details['data']['ratingCount']-int(details['data']['likeCount']), COLOUR_DEFAULT)
             rating += "   ||  %s Views: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, details['data']['viewCount'])
             rating += "   ||  %s Duration: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, self.expandTime(details['data']['duration']))
             self.main.msg(self.main.channel, rating.encode('ascii', 'replace'))
