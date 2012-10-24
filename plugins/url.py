@@ -9,6 +9,8 @@ class Plugin():
     depends = ['logger']
     hooks = {'privmsg': 'privmsg'}
 
+    ytBarLength = 20
+
     def shorten(self, user, args):
         if args:
             self.logger.log(LOG_DEBUG, "Shortening '%s'" % args[0])
@@ -45,7 +47,9 @@ class Plugin():
         output, err = subprocess.Popen(url, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         if output.startswith("{"): #It was probably a valid video id
             details = simplejson.loads(output)
-            rating = "%sRating:%s%s %s%s /%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_BLACK+",9", details['data']['likeCount'], COLOUR_DEFAULT, COLOUR_BLACK+",4", details['data']['ratingCount']-int(details['data']['likeCount']), COLOUR_DEFAULT)
+            space = " "
+            likeLength = details['data']['likeCount']/(details['data']['likeCount']-int(details['data']['ratingCount']))*ytBarLength
+            rating = "%sRating:%s%s %s%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_BLACK+",9", space*(likeLength-1), COLOUR_BLACK+",4", space*(ytBarLength-likeCount-1), COLOUR_DEFAULT)
             rating += "   ||  %s Views: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, details['data']['viewCount'])
             rating += "   ||  %s Duration: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, self.expandTime(details['data']['duration']))
             self.main.msg(self.main.channel, rating.encode('ascii', 'replace'))
