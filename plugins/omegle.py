@@ -78,6 +78,7 @@ class Plugin():
                 self.clients[index-1].disconnect()
                 sleep(0.5)
                 del self.clients[index-1]
+                self.main.msg(self.main.channel, "Kicked,")
                 self.connectNext()
             except: pass
     
@@ -171,14 +172,13 @@ class Plugin():
             message = "Stranger: " + message
             self.logger.log(LOG_INFO, message)
         else:
-            message = "Stranger %s: %s" % (str(index+1), message)
-
             if self.mode == 1:
                 newindex = index*(-1) + 1
                 self.clients[newindex].sendMsg(message)
             else:
                 self.sendToAll(index, "%s: %s" % (str(index+1), message))
 
+        message = "Stranger %s: %s" % (str(index+1), message)
         self.main.msg(self.main.channel, message.encode('ascii', 'replace'))
         self.logger.log(LOG_DEBUG, "OMEGLE: %s" % (message))
 
