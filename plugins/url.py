@@ -48,11 +48,11 @@ class Plugin():
         if output.startswith("{"): #It was probably a valid video id
             details = simplejson.loads(output)
 
-            likes = int(details['data']['likeCount'])
-            dislikes = int(details['data']['ratingCount'])-int(details['data']['likeCount'])
+            likes = float(details['data']['likeCount'])
+            ratings = float(details['data']['ratingCount'])
 
             space = " "
-            likeLength = int(likes/(dislikes*100.0)*self.ytBarLength)
+            likeLength = int((likes/ratings)*self.ytBarLength)
             rating = "%sRating:%s %s%s%s%s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_BLACK+",9", space*(likeLength), COLOUR_BLACK+",4", space*(self.ytBarLength-likeLength), COLOUR_DEFAULT)
             rating += "   ||  %s Views: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, details['data']['viewCount'])
             rating += "   ||  %s Duration: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, self.expandTime(details['data']['duration']))
