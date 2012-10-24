@@ -47,9 +47,13 @@ class Plugin():
         output, err = subprocess.Popen(url, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         if output.startswith("{"): #It was probably a valid video id
             details = simplejson.loads(output)
+
+            likes = int(details['data']['likeCount'])
+            dislikes = int(details['data']['ratingCount'])-int(details['data']['likeCount'])
+
             space = " "
-            likeLength = details['data']['likeCount']/(details['data']['likeCount']-int(details['data']['ratingCount']))*ytBarLength
-            rating = "%sRating:%s%s %s%s %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_BLACK+",9", space*(likeLength-1), COLOUR_BLACK+",4", space*(ytBarLength-likeCount-1), COLOUR_DEFAULT)
+            likeLength = int(likes/(dislikes*100.0)*self.ytBarLength)
+            rating = "%sRating:%s %s%s%s%s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, COLOUR_BLACK+",9", space*(likeLength), COLOUR_BLACK+",4", space*(self.ytBarLength-likeLength), COLOUR_DEFAULT)
             rating += "   ||  %s Views: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, details['data']['viewCount'])
             rating += "   ||  %s Duration: %s%s" % (COLOUR_BOLD, COLOUR_DEFAULT, self.expandTime(details['data']['duration']))
             self.main.msg(self.main.channel, rating.encode('ascii', 'replace'))
