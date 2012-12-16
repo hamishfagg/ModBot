@@ -1,4 +1,4 @@
 feeds = {
-    "feedname": "http://feed.me/yum.rss",
-  "othername": "http://feed2.lol/yougettheidea"
+    "Feed Name": "http://feed.me/yum.rss",
+    "Other Feed": "http://feed2.lol/yougettheidea"
 }

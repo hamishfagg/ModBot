@@ -10,7 +10,7 @@ class Plugin():
         self.reasons = {}
 
     def away(self, user, args):
-        reason = " ".join(args)
+        reason = " ".join(args[1:])
         if len(reason) == 0:
                 reason = 'None'
         if self.reasons.get(user.lower(), None) == None:

@@ -6,4 +6,4 @@ class Module():
 
     def say(self, user, channel, args):
         if self.main.users[user].isAdmin(channel):
-            self.main.msg(self.channel, " ".join(args))
+            self.main.msg(self.channel, " ".join(args[1:]))

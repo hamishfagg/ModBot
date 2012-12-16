@@ -40,10 +40,12 @@ class Plugin():
                 self.main.msg(self.main.channel, "Exceeded maximum search results. Try a more specific search")
 
     def randQuote(self, user, args):
+        args = args[1:]    
         quote = self.mysql.find(self.tableName, order="rand()", limit=1)
         self.main.msg(self.main.channel, quote[0][2])
 
     def newQuote(self, user, args):
+        args = args[1:]
         if user in self.main.admins:
             self.mysql.insert(self.tableName, data={'user': user, 'quote': " ".join(args), 'channel':self.main.channel})
             self.main.msg(self.main.channel, "Quote was saved successfully")

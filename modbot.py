@@ -234,7 +234,7 @@ class Bot(irc.IRCClient):
         else: self.logger.log(LOG_DEBUG, '<%s> %s' % (userName, message))
 
         if words[0].startswith('!'):
-            self.runCmd(words[0][1:].lower(), userName, words[1:])
+            self.runCmd(words[0][1:].lower(), userName, words)
 
         if userName in self.admins:
             if words[0] == '!load': # someone wants to load a plugin

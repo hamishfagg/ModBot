@@ -22,8 +22,8 @@ class Module():
         if len(self.current) == 0: self.current = None
         else: self.current = self.current[0]
 
-    def poll(self, user, channel, args, PM):
-        if PM: channel = user
+    def poll(self, user, channel, args):
+        args = args[1:]
         if self.current == None:
             self.main.msg(channel, "There is currently no poll.")
         elif user in self.main.users:
@@ -31,7 +31,8 @@ class Module():
             self.main.msg(channel, "Current votes:%s %s%s /%s %s%s." % (COLOUR_GREEN, str(self.current[3]), COLOUR_DEFAULT, COLOUR_RED, str(self.current[4]), COLOUR_DEFAULT))
             self.main.msg(channel, "Type '!vote yes' or '!vote no' to vote.")
 
-    def closePoll(self, user, channel, args, PM):
+    def closePoll(self, user, channel, args):
+        args = args[1:]
         self.mysql.update(self.tableName, data={'closed': datetime.now()}, conditions={'id': self.current[0]})
         if self.current != None:
             for chan in self.main.channels:
@@ -43,7 +44,8 @@ class Module():
             if PM: channel = user
             self.main.msg(channel, "There is currently no poll.")
 
-    def newPoll(self, user, channel, args, PM):
+    def newPoll(self, user, channel, args):
+        args = args[1:]
         poll = " ".join(args)
         if user in self.main.channels[channel]['admins']:
             if len(poll) != 0:
@@ -54,7 +56,8 @@ class Module():
                     self.main.msg(channel, "There is a new poll: %s" % self.current[2])
                     self.main.msg(channel, "Type '!vote yes' or '!vote no' to vote.")
 
-    def vote(self, user, channel, args, PM):
+    def vote(self, user, channel, args):
+        args = args[1:]
         if PM: channel = user
         if self.current == None:
             self.main.msg(channel, "There is currently no poll.")

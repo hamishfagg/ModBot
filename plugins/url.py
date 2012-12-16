@@ -12,6 +12,7 @@ class Plugin():
     ytBarLength = 20
 
     def shorten(self, user, args):
+        args = args[1:]
         if args:
             self.logger.log(LOG_DEBUG, "Shortening '%s'" % args[0])
             self.main.msg(self.main.channel, self.getShortUrl(args[0]))

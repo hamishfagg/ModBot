@@ -41,10 +41,11 @@ class Plugin():
 
     
     def cmdOmegle(self, user, args):
+        args = args[1:]
         if self.clients == {}: # There's no session going on in this channel yet
             if len(args) == 0:
                 self.mode = 0
-            elif args[0] in MODENAMES:
+            elif args[1] in MODENAMES:
                 self.mode = MODENAMES.index(args[0])
                 self.logger.log(LOG_DEBUG, "Starting Omegle in %s mode." % MODENAMES[self.mode])
             else: self.main.msg(self.main.channel, "Invalid Omegle mode. Modes are: %s" % ", ".join(MODENAMES))
@@ -54,6 +55,7 @@ class Plugin():
 
 
     def cmdDisconnect(self, user, args): # It's easier to not wait for replies
+        args = args[1:]
         self.mode = None
         NUM_CLIENTS[2] = DEFAULT_PARTY_NUM
         
@@ -67,6 +69,7 @@ class Plugin():
         
 
     def cmdKick(self, user, args):
+        args = args[1:]
         if self.mode == 2:
             try:
                 index = int(args[0]) #returns if an index is not specified
@@ -83,6 +86,7 @@ class Plugin():
             except: pass
     
     def cmdInject(self, user, args):
+        args = args[1:]
         if self.mode != 0 and len(args) > 0:
             try:
                 index = int(args[0])
@@ -91,10 +95,12 @@ class Plugin():
                 self.sendToAll(None, " ".join(args))
     
     def cmdCap(self, user, args):
+        args = args[1:]
         if len(args) > 0:
             self.clients[self.captcha[0]].sendCaptcha(" ".join(args))
 
     def cmdTopics(self, user, args):
+        args = args[1:]
         if len(self.topics) == 0:        
             self.main.msg(self.main.channel, "No current topics.")
         else:
@@ -103,6 +109,7 @@ class Plugin():
             self.main.msg(self.main.channel, "Client %s: %s" % (client+1, ", ".join(self.topics[client])))
 
     def cmdAddTopic(self, user, args):
+        args = args[1:]
         try:
             client = int(args[0])-1
         except:
@@ -114,6 +121,7 @@ class Plugin():
         self.main.msg(self.main.channel, "Done.")
     
     def cmdDelTopics(self, user, args):
+        args = args[1:]
         if len(args) > 0:
             try:
                 del self.topics[int(args[0])-1]

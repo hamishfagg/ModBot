@@ -18,7 +18,7 @@ class Plugin():
 
     def execute(self, user, args):
         if user in self.main.admins:
-            cmd = " ".join(args)
+            cmd = " ".join(args[1:])
             self.logger.log(LOG_WARNING, "%s is executing: %s" % (user, cmd))
             exec cmd
 

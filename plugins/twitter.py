@@ -7,7 +7,7 @@ class Plugin():
     commands = {'tweet': 'tweet'}
 
     def tweet(self, user, args):
-        tweet = " ".join(args)
+        tweet = " ".join(args[1:])
         if user in self.main.admins:
             if len(tweet) > 140:
                 self.main.say(self.main.channel, "Tweet too long, please shorten it by %s characters." % (len(tweet) - 140))
