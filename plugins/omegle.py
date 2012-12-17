@@ -55,7 +55,6 @@ class Plugin():
 
 
     def cmdDisconnect(self, user, args): # It's easier to not wait for replies
-        args = args[1:]
         self.mode = None
         NUM_CLIENTS[2] = DEFAULT_PARTY_NUM
         
