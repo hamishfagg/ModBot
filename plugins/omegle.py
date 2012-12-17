@@ -45,7 +45,7 @@ class Plugin():
         if self.clients == {}: # There's no session going on in this channel yet
             if len(args) == 0:
                 self.mode = 0
-            elif args[1] in MODENAMES:
+            elif args[0] in MODENAMES:
                 self.mode = MODENAMES.index(args[0])
                 self.logger.log(LOG_DEBUG, "Starting Omegle in %s mode." % MODENAMES[self.mode])
             else: self.main.msg(self.main.channel, "Invalid Omegle mode. Modes are: %s" % ", ".join(MODENAMES))
